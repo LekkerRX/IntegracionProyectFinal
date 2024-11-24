@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h1>Gestionar Perfil de {{ usuario.username }}</h1>
+<p>Email: {{ usuario.email }}</p>
+<p>
+    Estado: 
+    {% if usuario.is_active %}
+        Activo
+    {% else %}
+        Suspendido
+    {% endif %}
+</p>
+
+<form method="post">
+    {% csrf_token %}
+    <label for="accion">Acción:</label>
+    <select name="accion" id="accion" required>
+        <option value="suspender">Suspender</option>
+        <option value="reactivar">Reactivar</option>
+        <option value="eliminar">Eliminar</option>
+    </select>
+    <label for="motivo">Motivo:</label>
+    <textarea name="motivo" id="motivo"></textarea>
+    <button type="submit">Aplicar</button>
+</form>
+{% endblock %}

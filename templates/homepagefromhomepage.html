@@ -1,0 +1,76 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block content %}
+
+<div class="container">
+    <div class="container mt-4">
+        <img src="{% static 'images/logoreal.png' %}" 
+             alt="Logo Mediano" 
+             class="img-fluid" 
+             style="width: 280px; height: 280px; margin-top: 25px; position: absolute; right: 0;">
+    </div>
+
+
+
+
+    <div class="row justify-content-center" style="height: 100vh;">
+        
+        <div class="col-12 d-flex align-items-center justify-content-center" >
+            <style>
+                /* Estilos del botón con imagen para el cliente */
+                .boton-con-imagen {
+                    background-image: url("{% static 'images/client.jpg' %}");
+                    background-size: 0px 0px; /* Tamaño inicial de la imagen */
+                    background-repeat: no-repeat;
+                    background-position: center;
+                    padding-left: 40px;
+                    transition: background-size 1s ease, background-position 0.5s ease; /* Transición suave */
+                }
+            
+                /* Efecto hover para expandir la imagen del cliente */
+                .boton-con-imagen:hover {
+                    background-size: 100% 100%; /* La imagen ocupa todo el botón */
+                    background-position: center;
+                }
+            
+                /* Estilos del botón con imagen para el técnico */
+                .boton-con-imagen-tecnico {
+                    background-image: url("{% static 'images/tecnico.avif' %}"); /* Imagen específica para el botón del técnico */
+                    background-size: 0px 0px; /* Tamaño inicial de la imagen */
+                    background-repeat: no-repeat;
+                    background-position: center;
+                    padding-left: 40px;
+                    transition: background-size 1s ease, background-position 0.5s ease; /* Transición suave */
+                }
+            
+                /* Efecto hover para expandir la imagen del técnico */
+                .boton-con-imagen-tecnico:hover {
+                    background-size: 100% 100%; /* La imagen ocupa todo el botón */
+                    background-position: center;
+                }
+            </style>
+            <button class="bottonEdit boton-con-imagen-tecnico" style="margin:15px; padding: 0; border: none;">
+                <a class="nav-link d-block w-100 h-100 text-center" href="{% url 'User:pagina_tecnico' %}" style="text-decoration: none; color: inherit;">
+                    <i class="bi bi-person-plus-fill"></i>
+                    <span>¿Eres un técnico especializado?</span>
+                </a>
+            </button>
+            
+            <button class="bottonEdit boton-con-imagen" style="margin:15px; padding: 0; border: none;">
+                <a class="nav-link d-block w-100 h-100 text-center" href="{% url 'User:login_client' %}" style="text-decoration: none; color: inherit;">
+                    {% csrf_token %}
+                    <i class="bi bi-person-plus-fill"></i>
+                    <span>¿O eres un cliente en busca de una solución?</span>
+                </a>
+            </button>
+            
+            
+            
+        
+        </div>
+    </div>
+    
+    
+</div>
+{% endblock %}
+

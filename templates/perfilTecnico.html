@@ -1,0 +1,425 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block content %}
+
+<div class="container-fluid mt-5" style="background-color:rgb(82, 82, 82);width:80%;border-radius:15px;padding:50px;">
+    {% if form.errors %}
+        <ul class="errorlist">
+            {% for field in form %}
+                {% for error in field.errors %}
+                    <li>{{ error }}</li>
+                {% endfor %}
+            {% endfor %}
+        </ul>
+    {% endif %}
+    <!-- Botón para abrir el modal de chats activos -->
+    
+    
+    <div class="row justify-content-center" style="">
+        <!-- Botón para abrir el modal de chats activos -->
+        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#chatModal">
+            Herramientas
+        </button>
+        <div class="col-md-6 text-center bg-light py-4 rounded shadow" style="border: 0px solid #fff;">
+            
+            <div class="profile-image-container mb-3" >
+                <img src="{% if tecnico.imagen_perfil %}{{ tecnico.imagen_perfil.url }}{% else %}{% static 'images/default-profile.png' %}{% endif %}" 
+                     alt="Imagen de Perfil" 
+                     class="img-fluid rounded-circle shadow" 
+                     style="width: 250px; height: 250px; object-fit: cover; border: 5px solid #fff;">
+            </div>
+            
+        
+            <div id="id_notificacion" style="display:none;">Formulario enviado con éxito</div>
+            <h4>{{ nombre_tecnico }}</h4> 
+            <p><strong>Email:</strong> {{ email }}</p>
+        </div>
+        
+
+        <div class="col-md-6 text-center text-light mt-3 mt-md-0 py-4">
+            
+            <p><strong>Especialidades:</strong> {{ tecnico.especialidades }}</p>
+
+            <div class="mt-4">
+                <h5><strong>Horario Disponible</strong></h5>
+                <table class="table table-bordered table-light text-dark" style="box-shadow: 10px 20px 25px;">
+                    <thead>
+                        <tr>
+                            <th>Día</th>
+                            <th>Horas</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for horario in horarios %}
+                            <tr>
+                                <td>{{ horario.dia }}</td>
+                                <td>Desde {{ horario.horas }}</td>
+                                
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            <button class="bottonEditv2" data-bs-toggle="modal" data-bs-target="#editProfileModal">
+                <i class="bi bi-pencil"></i>
+                <span class="span-editar"  >Editar Perfil</span>
+            </button>
+            
+
+             <!-- Modal -->
+             <div class="modal fade" id="chatModal" tabindex="-1" aria-labelledby="chatModalLabel" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content" style="color:black;background: rgba( 255, 255, 255, 0.55 );
+box-shadow: 0 8px 32px 0 rgba( 31, 38, 135, 0.37 );
+backdrop-filter: blur( 5px );
+-webkit-backdrop-filter: blur( 5px );
+border-radius: 10px;">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="chatModalLabel">Herramientas</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <a href="{% url 'User:publicaciones_tecnico' %}" class="btn btn-secondary">
+                                <i class="bi bi-calendar-plus"></i>
+                                <span>Hac Click para buscar trabajo</span>
+                            </a>
+                            <a href="{% url 'Credencial:subir_credencial' %}" class="btn btn-secondary">Subir Credenciales</a>
+                            {% if chats_activos %}
+                                <div class="chat-list" style="max-height: 300px; overflow-y: auto;">
+                                        <strong>Lista de Chats</strong>
+                                        {% for chat in chats_activos %}
+                                        <div style="background-color:white;margin:25px;border-radius:10px"> 
+                                            <li>
+                                            <strong>Chat con</strong> 
+                                                {% if request.user == chat.cliente %}
+                                                    {{ chat.tecnico.username }}
+                                                {% else %}
+                                                    {{ chat.cliente.username }}
+                                                {% endif %}
+                                               <span>- <strong>Titulo publicación:</strong> {{ chat.publicacion.titulo }}</span>
+                                               <span>- <strong>Creado el:</strong> {{ chat.creado_en|date:"d M Y H:i" }}</span>
+                                                <a class="btn btn-secondary" href="{% url 'Chat:detalle_chat_tecnico' chat.id %}">Ir al chat</a>
+                                            </li>
+                                        </div>
+                                        {% endfor %}
+                                    
+                                </div>
+                            {% else %}
+                                <p>No tienes chats activos.</p>
+                            {% endif %}
+                        </div>
+                        <div class="modal-footer">
+
+                            <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Cerrar</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+
+            <div class="modal fade" id="editProfileModal" tabindex="-1" aria-labelledby="editProfileModalLabel" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content" style="background: rgba( 255, 255, 255, 0.25 );
+box-shadow: 0 8px 32px 0 red;
+backdrop-filter: blur( 3px );
+-webkit-backdrop-filter: blur( 3px );
+border-radius: 10px;
+border: 1px solid rgba( 255, 255, 255, 0.18 );">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="editProfileModalLabel" style="color:black">Editar Perfil</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body" style="color:black">
+                            <form method="post" enctype="multipart/form-data" id="editProfileForm">
+                                {% csrf_token %}
+                                <div class="text-center mb-3">
+                                    <p>Imagen actual:</p>
+                                    <img src="{% if tecnico.imagen_perfil %}{{ tecnico.imagen_perfil.url }}{% else %}{% static 'images/default-profile.png' %}{% endif %}" 
+                                         alt="Imagen de Perfil Actual" 
+                                         class="img-thumbnail" 
+                                         style="width: 150px; height: 150px; object-fit: cover;">
+                                         {{ form.imagen_perfil }}
+                                </div>                               
+                                <div class="form-group mb-3" >
+                                    <label class="form-label">Días de Trabajo</label>
+                                    <div style="max-height: 150px; overflow-y: auto;">
+                                        <table class="table table-dark">
+                                            <thead>
+                                                <tr>
+                                                    <th>Lunes</th>
+                                                    <th>Martes</th>
+                                                    <th>Miércoles</th>
+                                                    <th>Jueves</th>
+                                                    <th>Viernes</th>
+                                                    <th>Sábado</th>
+                                                    <th>Domingo</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <tr>
+                                                    <td>
+                                                        <input type="checkbox" name="dias_trabajo" value="Lunes" 
+                                                               {% if 'Lunes' in form.dias_trabajo.value %}checked{% endif %}>
+                                                    </td>
+                                                    <td>
+                                                        <input type="checkbox" name="dias_trabajo" value="Martes" 
+                                                               {% if 'Martes' in form.dias_trabajo.value %}checked{% endif %}>
+                                                    </td>
+                                                    <td>
+                                                        <input type="checkbox" name="dias_trabajo" value="Miércoles" 
+                                                               {% if 'Miércoles' in form.dias_trabajo.value %}checked{% endif %}>
+                                                    </td>
+                                                    <td>
+                                                        <input type="checkbox" name="dias_trabajo" value="Jueves" 
+                                                               {% if 'Jueves' in form.dias_trabajo.value %}checked{% endif %}>
+                                                    </td>
+                                                    <td>
+                                                        <input type="checkbox" name="dias_trabajo" value="Viernes" 
+                                                               {% if 'Viernes' in form.dias_trabajo.value %}checked{% endif %}>
+                                                    </td>
+                                                    <td>
+                                                        <input type="checkbox" name="dias_trabajo" value="Sábado" 
+                                                               {% if 'Sábado' in form.dias_trabajo.value %}checked{% endif %}>
+                                                    </td>
+                                                    <td>
+                                                        <input type="checkbox" name="dias_trabajo" value="Domingo" 
+                                                               {% if 'Domingo' in form.dias_trabajo.value %}checked{% endif %}>
+                                                    </td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                                
+                                {{ form.nombre }}
+                                {{ form.imagen_perfi }}
+                                <div style="margin-top:15px">
+                                    Hora de inicio:
+                                    {{ form.hora_inicio }} 
+                                </div >
+
+                                <div style="margin-top:15px">
+                                    Hora de termino:
+                                    {{ form.hora_fin }}
+                                </div>
+                                <div style="margin-top:15px">
+                                    Cambia tu correo:
+                                    {{ form.correo }}
+                                </div>
+                               
+                                <div style="max-height: 150px; overflow-y: auto;background-color:black;margin-top:15px">
+                                    <table class="table table-dark">
+                                        <thead>
+                                            <th colspan="7" class="text-center">Seleccione las comunas donde trabaja:</th> <!-- Título centrado -->
+                                        </thead>
+                                        <tbody>
+                                            {% for localidad in form.localidades %}
+                                                {% if forloop.counter0|divisibleby:4 and not forloop.first %}
+                                                    </tr>
+                                                {% endif %}
+                                                {% if forloop.counter0|divisibleby:4 %}
+                                                    <tr>
+                                                {% endif %}
+                                                <td style="border: 3px solid white;"> 
+                                                    {{ localidad }}
+                                                    {{ localidad.label }}
+                                                </td>
+                                            {% endfor %}
+                                            {% if forloop.last %}
+                                                </tr>
+                                            {% endif %}
+                                        </tbody>
+                                    </table>
+                                    
+                                </div>
+                                <div class="mb-3">
+                                    <label for="{{ form.oficios.id_for_label }}" class="form-label" style="text-align:center;">Selecciona tus áreas de trabajo</label>
+                                    <div style="max-height: 200px; overflow-y: auto; text-align:left; background-color:#d3d3d3; color:black;">
+                                        {{ form.oficios }}  <!-- Este campo maneja la selección múltiple de los oficios -->
+                                    </div>
+                                </div>
+                                
+                  
+                                
+                                
+                                
+                                <button type="submit" class="GuardarEditButton ">Guardar Cambios</button>
+                            </form>
+                            
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+   
+    <div style="display: flex; justify-content: space-between; margin-top: 20px;">
+        <!-- Contenedor de oficios, alineado a la izquierda -->
+        <div class="col-md-4 mt-4 mt-md-0" style="color: white; display: flex; flex-direction: column; justify-content: flex-start; width: 35%;">
+            <h4 class="text-center text-light">Oficios</h4>
+            <div class="d-flex flex-wrap justify-content-center" style="gap: 15px;">
+                {% for oficio in tecnico.oficios.all %}
+                    <div class="card1">
+                        <div class="card-body">
+                            <p class="card-title">{{ oficio.nombre }}</p>
+                        </div>
+                    </div>
+                {% empty %}
+                    <div class="card1">
+                        <div class="card-body">
+                            <p class="card-title">No tiene oficios asignados.</p>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Contenedor del mapa y el título de comunas disponibles -->
+        <div style="display: flex; flex-direction: column; align-items: flex-end; width: 55%;">
+            <h4 class="mt-4 text-light" style="text-align: left;">Comunas disponibles para trabajar</h4>
+            <div id="map" style="height: 400px; width: 100%; max-width: 600px; border-radius: 15px; box-shadow: 10px 10px 15px black;"></div>
+        </div>
+    </div>
+    
+    
+    <p style="display: flex; justify-content: center;margin-top:50px"><strong>Lista de Comunas: " </strong> {% for localidad in localidades %}{{ localidad }}{% if not forloop.last %}, {% endif %}{% endfor %}"</p>
+    
+</div>
+
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
+<script>
+    // Inicializar el mapa
+    var map = L.map('map').setView([-33.4489, -70.6693], 10); // Centrar en Santiago
+
+    // Capa de OpenStreetMap
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+    }).addTo(map);
+
+    // Coordenadas de todas las localidades
+    const localidadesCoords = {
+        "Cerrillos": [-33.5018, -70.7143],
+        "Cerro Navia": [﻿-33.416666666667, -70.716666666667],
+        "Conchalí": [-33.3960, -70.6820],
+        "El Bosque": [-33.5483, -70.6693],
+        "Estación Central": [-33.4569, -70.6996],
+        "Huechuraba": [-33.3678, -70.6780],
+        "Independencia": [-33.4190, -70.6520],
+        "La Cisterna": [-33.5275, -70.6790],
+        "La Florida": [-33.5227, -70.5983],
+        "La Granja": [-33.5370, -70.6180],
+        "La Pintana": [-33.5830, -70.6340],
+        "La Reina": [-33.4560, -70.5410],
+        "Las Condes": [-33.4053, -70.5802],
+        "Lo Barnechea": [-33.3510, -70.5170],
+        "Lo Espejo": [-33.5150, -70.6960],
+        "Lo Prado": [-33.4440, -70.7230],
+        "Macul": [-33.4840, -70.5950],
+        "Maipú": [-33.5081, -70.7527],
+        "Ñuñoa": [-33.4569, -70.6032],
+        "Pedro Aguirre Cerda": [-33.4850, -70.6820],
+        "Peñalolén": [-33.4793, -70.5561],
+        "Providencia": [-33.4324, -70.6129],
+        "Pudahuel": [-33.3925, -70.7807],
+        "Quilicura": [-33.3670, -70.7360],
+        "Quinta Normal": [-33.4370, -70.7030],
+        "Recoleta": [-33.4040, -70.6410],
+        "Renca": [-33.4160, -70.7260],
+        "San Joaquín": [-33.4960, -70.6340],
+        "San Miguel": [-33.4965, -70.6483],
+        "San Ramón": [-33.5220, -70.6410],
+        "Santiago": [-33.4489, -70.6693],
+        "Vitacura": [-33.3811, -70.5983],
+        "Puente Alto":[-33.6166667, -70.583333],
+        "San Bernardo": [-33.611111, -70.607778]
+        
+    };
+    
+
+    // Localidades del técnico en contexto de JavaScript
+    const localidadesMarcadas = {{ localidades|safe }};
+
+    // Agregar marcadores solo para las localidades del técnico
+    const redIcon = new L.Icon({
+        iconUrl: '{% static "images/icons8-marcador-64.png" %}',
+        iconSize: [30, 30],
+        iconAnchor: [12, 41],
+        popupAnchor: [1, -34]
+    });
+
+    for (const [nombre, coords] of Object.entries(localidadesCoords)) {
+        if (localidadesMarcadas.includes(nombre)) {
+            L.marker(coords, { icon: redIcon }).addTo(map)
+                .bindPopup(nombre);
+        }
+    }
+</script>
+<style>
+    .card1 {
+        width: 150px;
+        background-color: #444;
+        border-radius: 8px;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        position: relative; /* Necesario para las estrellas */
+        overflow: hidden; /* Asegura que las estrellas no salgan fuera de la tarjeta */
+        transition: transform 0.3s ease, box-shadow 0.3s ease, background-color 0.3s ease;
+    }
+
+    /* Efecto Hover - dorado más suave y elevar la tarjeta */
+    .card1:hover {
+        background-color: #d4af37; /* Dorado suave */
+        transform: translateY(-10px); /* Eleva la carta */
+        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3); /* Aumenta la sombra */
+    }
+
+    .card-body {
+        padding: 10px;
+        text-align: center;
+    }
+
+    .card-title {
+        font-size: 16px;
+        color: white;
+    }
+
+    /* Efecto de estrellitas o escarcha */
+    .card:hover::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: radial-gradient(circle, white 2px, transparent 2px);
+        background-size: 10px 10px;
+        pointer-events: none; /* Asegura que no interfiera con el clic */
+        animation: sparkle 1s infinite;
+    }
+
+    /* Animación para las estrellas */
+    @keyframes sparkle {
+        0% {
+            opacity: 0;
+            transform: scale(0.5);
+        }
+        50% {
+            opacity: 1;
+            transform: scale(1);
+        }
+        100% {
+            opacity: 0;
+            transform: scale(0.5);
+        }
+    }
+
+    
+</style>
+{% endblock %}
+
+##
+

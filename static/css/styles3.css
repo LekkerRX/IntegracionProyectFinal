@@ -1,0 +1,110 @@
+
+.container-fluid{
+    background-color: #a8a8a8;
+}
+
+
+
+.section {
+    background-color:transparent;
+    border: 2px solid black;
+    color:black;
+
+    overflow: auto;
+
+    height: 100%;
+}
+.dias-trabajo-bg {
+    background-color: #f0f0f0; /* Cambia este color según tus necesidades */
+    padding: 10px; /* Agrega un padding si es necesario */
+}
+
+
+/* style.css */
+.hide-up {
+    transform: translateY(-100%);
+    opacity: 0;
+    transition: transform 0.5s, opacity 0.5s;
+    background-color: red;
+}
+.navbar {
+
+    width: 100%;
+    padding: 10px 0;
+    color: #fff;
+    position: fixed; /* Agrega esta línea para que el navbar esté fijo en la parte superior */
+    /* Coloca el navbar en la parte superior de la pantalla */
+    z-index: 1000; /* Asegura que el navbar esté en la parte superior de otros elementos */
+}
+
+
+.navbar ul {
+    list-style: none; /* Quita los puntos de lista */
+    padding: 0;
+}
+
+.navbar ul li {
+    display: inline; /* Para que los elementos de la lista estén en línea */
+    margin-right: 20px; /* Espacio entre elementos de la lista */
+}
+
+/* Estilos para los enlaces de navegación */
+.navbar a {
+    text-decoration: none; /* Quita la decoración de subrayado de los enlaces */
+    color: #fff; /* Color del texto de los enlaces */
+}
+
+/* Estilos para la sección de contenido */
+.content {
+    padding: 20px; /* Espaciado interior de la sección de contenido */
+    
+}
+/* Estilos para el formulario minimalista */
+form {
+
+    margin: 0 auto;
+    padding: 20px;
+
+    background-color: #f9f9f9;
+    border-radius: 25px;
+    height: 100%;
+    width: 100%;
+      color: black;
+ 
+
+}
+
+
+
+form textarea[name="contenido"] {
+    
+    resize: none; /* Evita que el usuario redimensione el campo de texto */
+    height:25px;
+    width: 100%; /* Usar el ancho máximo disponible */
+}
+form input[type="file"] {
+    width: 100%; /* Usar el ancho máximo disponible */
+    padding: 10px;
+    margin-top: 10px;
+    border: 1px solid #ccc;
+    background-color: #fff;
+    box-sizing: border-box; /* Incluye el relleno en el ancho total */
+}
+form button {
+    background-color: #007bff;
+    color: #fff;
+    border: none;
+    padding: 10px 20px;
+    cursor: pointer;
+    margin-top: 10px;
+}
+
+form button:hover {
+    background-color: #0056b3;
+}
+
+
+
+
+
+/* 256x128 */

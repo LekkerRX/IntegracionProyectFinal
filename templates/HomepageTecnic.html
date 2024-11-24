@@ -1,0 +1,67 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block content %}
+
+<div class="container" >
+
+    <div class="container mt-4">
+        <img src="{% static 'images/logoreal.png' %}" 
+             alt="Logo Mediano" 
+             class="img-fluid" 
+             style="width: 280px; height: 280px; margin-top: 25px; position: absolute; right: 0;">
+    </div>
+
+    {% if form.non_field_errors %}
+        <div class="alert alert-danger" role="alert">
+            {{ form.non_field_errors }}
+        </div>
+    {% endif %}
+    <div class="row justify-content-center" style="height: 100vh;">
+        <div class="col-12 d-flex align-items-center justify-content-center">
+            
+            <a class="bottonEdit nav-link" href="{% url 'User:register' %}" style="margin:15px; display: inline-flex;align-items: center;justify-content: center;">
+                <i class="bi bi-person-plus-fill"></i>
+                <span>Regístrate</span>
+            </a>
+
+            <button href="{% url 'User:login' %}" type="button" class="bottonEdit" data-bs-toggle="modal" data-bs-target="#loginModal">
+                <span>Iniciar Sesión</span>
+                <i class="bi bi-box-arrow-in-right"></i>
+            </button>
+            <!-- Modal de Bootstrap -->
+            <div class="modal fade" id="loginModal" tabindex="-1" aria-labelledby="loginModalLabel" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content" style="color: black;background: rgba( 255, 255, 255, 0.45 );box-shadow: 0 8px 32px 0 rgba( 31, 38, 135, 0.37 );backdrop-filter: blur( 3px );-webkit-backdrop-filter: blur( 3px );border-radius: 10px;border: 1px solid rgba( 255, 255, 255, 0.18 );">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="loginModalLabel">Iniciar Sesión</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                        </div>
+                        <div class="modal-body">
+                            <!-- Mensaje de error -->
+                            
+                            <!-- Formulario de Login -->
+                            <form method="POST" action="{% url 'User:login' %}">
+                                {% csrf_token %}
+                                <div class="mb-3">
+                                    <label for="email" class="form-label">Correo Electrónico</label>
+                                    <input type="email" class="form-control" id="email" name="email" placeholder="Correo electrónico" required>
+                                    
+                                </div>
+                                <div class="mb-3">
+                                    <label for="password" class="form-label">Contraseña</label>
+                                    <input type="password" class="form-control" id="password" name="password" placeholder="Contraseña" required>
+                                    
+                                </div>
+                                <button type="submit" class="btn btn-primary w-100">Iniciar Sesión</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+   
+</div>
+
+{% endblock %}
+                  

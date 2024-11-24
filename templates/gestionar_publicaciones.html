@@ -1,0 +1,484 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+{% if messages %}
+    <ul class="messages">
+        {% for message in messages %}
+            <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+        {% endfor %}
+    </ul>
+{% endif %}
+
+
+<script>
+
+    document.addEventListener('DOMContentLoaded', function () {
+        // Buscar el botón y la lista de técnicos
+        var toggleButton = document.getElementById('toggle-tecnicos');
+        var tecnicosList = document.getElementById('tecnicos-list');
+        
+        // Verificar si los elementos existen antes de agregar el evento
+        if (toggleButton && tecnicosList) {
+            toggleButton.addEventListener('click', function () {
+                // Cambiar la visibilidad de la lista de técnicos
+                if (tecnicosList.style.display === 'none') {
+                    tecnicosList.style.display = 'block';  // Mostrar lista
+                } else {
+                    tecnicosList.style.display = 'none';   // Ocultar lista
+                }
+            });
+        }
+    });
+
+    
+
+    
+    
+
+    function confirmarEliminacion() {
+        if (confirm('¿Estás seguro de que deseas eliminar esta publicación?')) {
+            // Si el usuario confirma, envía el formulario
+            document.forms[0].submit();
+        } else {
+            // Si el usuario cancela, no se envía el formulario
+        }
+    }
+    
+
+    
+    document.addEventListener('DOMContentLoaded', function () {
+    // Script para llenar los campos del modal con los valores de la publicación seleccionada
+    var editarModal = document.getElementById('editarPublicacionModal');
+    
+    if (editarModal) {
+        editarModal.addEventListener('show.bs.modal', function (event) {
+            console.log('Modal abierto'); // Depuración
+            
+            var button = event.relatedTarget; // Botón que activó el modal
+            var id = button.getAttribute('data-id');
+            var titulo = button.getAttribute('data-titulo');
+            var descripcion = button.getAttribute('data-descripcion');
+            var monto = button.getAttribute('data-monto');
+            var oficios = button.getAttribute('data-oficios').split(',').map(function(oficio) {
+                return oficio.trim(); // Asegura que no haya espacios extra
+            });
+            var ubicacion = button.getAttribute('data-ubicacion');
+
+            // Verificación
+            console.log('ID:', id);
+            console.log('Título:', titulo);
+            console.log('Descripción:', descripcion);
+            console.log('Monto:', monto);
+            console.log('Oficios:', oficios);
+            console.log('Ubicación:', ubicacion);
+
+            // Rellenar los campos del formulario en el modal
+            document.getElementById('publicacion_id').value = id;
+            document.getElementById('titulo').value = titulo;
+            document.getElementById('descripcion').value = descripcion;
+            document.getElementById('limite_monto').value = monto;
+            document.getElementById('ubicacion').value = ubicacion;
+
+            // Marcar los checkboxes correspondientes a los oficios seleccionados
+            oficios.forEach(function(oficio) {
+                var checkbox = document.getElementById('oficio_' + oficio); // Asegúrate de que el id sea correcto
+                if (checkbox) {
+                    checkbox.checked = true;
+                }
+            });
+        });
+    } else {
+        console.error('Modal no encontrado: editarPublicacionModal');
+    }
+});
+
+
+
+
+
+</script>
+
+<div class="container" >
+
+    <!-- Botón para abrir el modal -->
+<button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#nuevoChatModal">
+    Ver Chats Activos
+</button>
+
+<!-- Modal -->
+<div class="modal fade" id="nuevoChatModal" tabindex="-1" aria-labelledby="nuevoChatModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content" style="color:black;background: rgba( 255, 255, 255, 0.55 );
+box-shadow: 0 8px 32px 0 rgba( 31, 38, 135, 0.37 );
+backdrop-filter: blur( 5px );
+-webkit-backdrop-filter: blur( 5px );
+border-radius: 10px;">
+            <div class="modal-header">
+                <h5 class="modal-title" id="nuevoChatModalLabel">Chats Activos</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <strong>Lista de Chats</strong>
+                {% if chats_activos %}
+
+                        {% for chat in chats_activos %}
+                            <div style="background-color:white;margin:25px;border-radius:10px"> 
+                                <li>
+                                    <strong>Chat con</strong> 
+                                    {% if request.user == chat.cliente %}
+                                        {{ chat.tecnico.username }}
+                                    {% else %}
+                                        {{ chat.cliente.username }}
+                                    {% endif %}
+                                    <span>- <strong>Titulo publicación:</strong> {{ chat.publicacion.titulo }}</span>
+                                        <span>- <strong>Creado el:</strong> {{ chat.creado_en|date:"d M Y H:i" }}</span>
+                               
+                                    <a href="{% url 'Chat:detalle_chat' chat.id %}">Ir al chat</a>
+                                </li>
+                            </div>
+                        {% endfor %}
+           
+                {% else %}
+                    <p>No tienes chats activos.</p>
+                {% endif %}
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+   
+    
+    
+    
+    
+
+    <h1 style="color:black;margin-top:55px">Gestionar Publicaciones</h1>
+    <!-- Icono de notificaciones en la barra de navegación -->
+    
+
+    <div class="d-flex justify-content-end mb-3">
+        <a href="{% url 'Post:gestionar_publicaciones' %}?sort=asc" class="btn btn-primary me-2">Fecha: Ascendente</a>
+        <a href="{% url 'Post:gestionar_publicaciones' %}?sort=desc" class="btn btn-primary">Fecha: Descendente</a>
+    </div>
+    <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#crearPublicacionModal">
+        Crear Nueva Publicación
+    </button>
+
+    {% if publicaciones %}
+        <h2 style="color:black">Tus Publicaciones</h2>
+        <div class="row">
+            {% for publicacion in publicaciones %}
+                <div class="col-md-4 mb-4">
+                    <div class="card shadow-lg border-light position-relative">
+                        <p class="d-inline-flex gap-1 position-absolute" style="top: 10px; right: 10px;">
+                            <!-- Botón principal -->
+                            <button class="btn btn-success" type="button" data-bs-toggle="collapse" data-bs-target=".multi-collapse" aria-expanded="false" aria-controls="multiCollapseExample1 multiCollapseExample2" style="width:25px; height:25px; display: flex; align-items: center; justify-content: center;margin-right:2px">
+                                +
+                            </button>
+                        </p>
+
+                        <!-- Botón flotante (Eliminar) -->
+                        <div class="collapse multi-collapse" id="multiCollapseExample1" style="position:absolute; top: 50px; right: 10px;">
+                            <a  onclick="confirmarEliminacion()" href="{% url 'Post:eliminar_publicacion' publicacion.id %}" class="btn btn-danger" style="height:30px;width:30px; display: flex; align-items: center; justify-content: center;margin-top:15px">
+                                <i class="bi bi-trash3"></i>
+                            </a>
+                        </div>
+
+
+                        <!-- Botón flotante 2 (Editar) -->
+                        <div class="collapse multi-collapse" id="multiCollapseExample2" style="position:absolute; top: 90px; right: 10px;">
+                            <button class="btn btn-success" style="height:30px;width:30px; display: flex; align-items: center; justify-content: center;margin-top:15px" data-bs-toggle="modal" data-bs-target="#editarPublicacionModal" data-id="{{ publicacion.id }}" data-titulo="{{ publicacion.titulo }}" data-descripcion="{{ publicacion.descripcion }}" data-monto="{{ publicacion.limite_monto }}" data-ubicacion="{{ publicacion.ubicacion }}" data-oficios="{{ publicacion.oficios.all|join:', ' }}">
+                                <i class="bi bi-pencil"></i>
+                            </button>
+                            <strong>
+                                {{publicacion.id}}
+                            </strong>
+                        </div>
+                        
+
+                        <img src="{% if publicacion.imagen %}{{ publicacion.imagen.url }}{% else %}{% static 'images/default-profile.png' %}{% endif %}" alt="Imagen de la publicación" class="card-img-top" style="max-height: 200px; object-fit: cover;">
+                        <div class="card-body">
+                            <p style="color:black"><strong>Creada por:</strong> {{ publicacion.cliente.username }}</p>
+                            <strong style="color:black">Titulo:</strong> 
+                            <h5 class="card-title" style="color:black">{{ publicacion.titulo }}</h5>
+                            <div class="post-content" style="background-color: #cfcfcf;border-radius:15px">
+                                <strong style="color:black">Descripción:</strong> 
+                                <p class="card-text" style="color:black;margin:5px">{{ publicacion.descripcion }}</p>
+                            </div>
+                        
+                            <p style="color:black"><strong>Límite a pagar:</strong> ${% load l10n %} {{ publicacion.limite_monto|localize }} CLP</p>
+                            <p style="color:black"><strong>Ubicación:</strong> {{ publicacion.ubicacion }}</p>
+                            <p style="color:black; text-transform: uppercase;"><strong>Estado:</strong> {{ publicacion.estado }}</p>
+                            <p style="color:black; text-transform: uppercase;"><strong>Fecha de creación:</strong> {{ publicacion.fecha_publicacion }}</p>
+                            <p style="color:black; text-transform: uppercase;"><strong>Oficios:</strong>
+                                {% for oficio in publicacion.oficios.all %}
+                                    {{ oficio.nombre }}{% if not forloop.last %}, {% endif %}
+                                {% endfor %}
+                            </p>
+                        
+                            <!-- Botón para mostrar los técnicos postulantes -->
+                            {% if publicacion.aceptacion_set.exists %}
+                                <button id="toggle-tecnicos" class="btn btn-secondary" style="margin-top: 10px;">
+                                    Ver técnicos postulantes
+                                </button>
+                                <div id="tecnicos-list" style="display: none; margin-top: 10px;">
+                                    <ul>
+                                        {% for aceptacion in publicacion.aceptacion_set.all %}
+                                            <li class="d-flex justify-content-between align-items-center">
+                                                <h3 style="color:black;font-size:15px">{{ aceptacion.tecnico.nombre }} {{ aceptacion.tecnico.apellido }}</h3>
+                                                <a href="{% url 'User:perfil_tecnico_cliente' id=aceptacion.tecnico.id %}">Ver perfil del técnico</a>
+                                                
+                                                <form method="post" action="{% url 'Post:aceptar_tecnico' %}">
+                                                    {% csrf_token %}
+                                                    <input type="hidden" name="publicacion_id" value="{{ publicacion.id }}">
+                                                    <input type="hidden" name="tecnico_id" value="{{ aceptacion.tecnico.id }}">
+                                                    <button type="submit" class="btn btn-primary">Aceptar Técnico</button>
+                                                </form>
+
+                                                <!-- Botón para eliminar técnico -->
+                                                <form method="post" action="{% url 'Post:eliminar_tecnico' publicacion_id=publicacion.id tecnico_id=aceptacion.tecnico.id %}">
+                                                    {% csrf_token %}
+                                                    <button type="submit" class="btn btn-danger">Eliminar Técnico</button>
+                                                </form>
+                                            </li>
+                                        {% endfor %}
+                                    </ul>
+                                </div>
+                            {% else %}
+                                <p>No hay técnicos postulados aún.</p>
+                            {% endif %}
+
+
+                        </div>
+                     
+                        
+                        
+                        
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <p style="color:black;margin-top:10px">No tienes publicaciones subidas. ¿Quieres crear una nueva?</p>
+    {% endif %}
+
+    
+
+    
+
+    <!-- Modal para crear nueva publicación -->
+
+    <div class="modal fade" id="crearPublicacionModal" tabindex="-1" aria-labelledby="crearPublicacionModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content" style="background: rgba( 255, 255, 255, 0.6 );
+box-shadow: 0 8px 32px 0 rgba( 31, 38, 135, 0.37 );
+backdrop-filter: blur( 15.5px );
+-webkit-backdrop-filter: blur( 15.5px );
+border-radius: 10px;
+border: 1px solid rgba( 255, 255, 255, 0.18 );">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="crearPublicacionModalLabel" style="color:black">Nueva Publicación</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form method="POST" enctype="multipart/form-data" style="color:black">
+                        {% csrf_token %}
+    
+                        <!-- Título -->
+                        <div class="mb-3">
+                            <label for="{{ form.titulo.id_for_label }}" class="form-label">Título</label>
+                            {{ form.titulo }}
+                        </div>
+    
+                        <!-- Descripción -->
+                        <div class="mb-3">
+                            <label for="{{ form.descripcion.id_for_label }}" class="form-label">Descripción</label>
+                            {{ form.descripcion }}
+                        </div>
+    
+                        <!-- Limite de Monto -->
+                        <div class="mb-3">
+                            <label for="{{ form.limite_monto.id_for_label }}" class="form-label">Límite de Monto</label>
+                            {{ form.limite_monto }}
+                        </div>
+                        
+    
+                        <!-- Imagen -->
+                        <div class="mb-3">
+                            <label for="{{ form.imagen.id_for_label }}" class="form-label">Imagen</label>
+                            {{ form.imagen }}
+                        </div>
+    
+                        <!-- Ubicación (Comuna) -->
+                        <div class="mb-3">
+                            <label for="{{ form.ubicacion.id_for_label }}" class="form-label">Comuna de Ubicación</label>
+                            {{ form.ubicacion }}
+                        </div>
+    
+                        <!-- Oficios (con scroll) -->
+                        <div class="mb-3">
+                            <label for="{{ form.oficios.id_for_label }}" class="form-label">Selecciona al experto que crees necesitar</label>
+                            <div style="max-height: 200px; overflow-y: auto;">
+                                {{ form.oficios }}
+                            </div>
+                        </div>
+    
+                        <button type="submit" class="btn btn-primary">Subir Publicación</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+
+
+ 
+        <!-- Modal para editar publicación -->
+    <div class="modal fade" id="editarPublicacionModal" tabindex="-1" aria-labelledby="editarPublicacionModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content" style="background: rgba( 255, 255, 255, 0.6 );
+            box-shadow: 0 8px 32px 0 rgba( 31, 38, 135, 0.37 );
+            backdrop-filter: blur( 15.5px );
+            -webkit-backdrop-filter: blur( 15.5px );
+            border-radius: 10px;
+            border: 1px solid rgba( 255, 255, 255, 0.18 );">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="editarPublicacionModalLabel" style="color:black">Editar Publicación</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form method="POST" enctype="multipart/form-data" style="color:black">
+                        {% csrf_token %}
+                        <!-- Campo oculto para el ID de la publicación -->
+                        <input type="hidden" id="publicacion_id" name="publicacion_id">
+                        {{publicacion.id}}
+                        <!-- Campo para el título -->
+                        <label for="titulo">Título</label>
+                        <input type="text" id="titulo" name="titulo" class="form-control" required>
+
+                        <!-- Campo para la descripción -->
+                        <label for="descripcion">Descripción</label>
+                        <textarea id="descripcion" name="descripcion" class="form-control" required></textarea>
+
+                        <!-- Campo para el límite a pagar -->
+                        <label for="limite_monto">Límite a Pagar</label>
+                        <input type="number" id="limite_monto" name="limite_monto" class="form-control" required step="0.02">
+
+                        <!-- Campo para la ubicación con un select de comunas -->
+                        <label for="ubicacion">Ubicación</label>
+                        <select id="ubicacion" name="ubicacion" class="form-control" required>
+                            <option value="Las Condes">Las Condes</option>
+                            <option value="Providencia">Providencia</option>
+                            <option value="La Reina">La Reina</option>
+                            <option value="Vitacura">Vitacura</option>
+                            <option value="Peñalolén">Peñalolén</option>
+                            <option value="San Miguel">San Miguel</option>
+                            <option value="Maipú">Maipú</option>
+                            <option value="Puente Alto">Puente Alto</option>
+                            <option value="Quilicura">Quilicura</option>
+                            <option value="San Bernardo">San Bernardo</option>
+                            <option value="Recoleta">Recoleta</option>
+                            <option value="Conchalí">Conchalí</option>
+                            <option value="Renca">Renca</option>
+                            <option value="Cerro Navia">Cerro Navia</option>
+                            <option value="Lo Prado">Lo Prado</option>
+                            <option value="La Florida">La Florida</option>
+                            <option value="Estación Central">Estación Central</option>
+                            <option value="Cerrillos">Cerrillos</option>
+                            <option value="El Bosque">El Bosque</option>
+                            <option value="Huechuraba">Huechuraba</option>
+                            <option value="Independencia">Independencia</option>
+                            <option value="La Cisterna">La Cisterna</option>
+                            <option value="La Granja">La Granja</option>
+                            <option value="La Pintana">La Pintana</option>
+                            <option value="Lo Barnechea">Lo Barnechea</option>
+                            <option value="Lo Espejo">Lo Espejo</option>
+                            <option value="Macul">Macul</option>
+                            <option value="Ñuñoa">Ñuñoa</option>
+                            <option value="Pedro Aguirre Cerda">Pedro Aguirre Cerda</option>
+                            <option value="Pudahuel">Pudahuel</option>
+                            <option value="Quinta Normal">Quinta Normal</option>
+                            <option value="San Joaquín">San Joaquín</option>
+                            <option value="San Ramón">San Ramón</option>
+                        </select>
+                        
+
+                        <label for="oficios">Selecciona el/los oficios</label>
+                    <div style="max-height: 200px; overflow-y: auto;">
+                        <!-- Renderiza los oficios de la misma manera que en el modal de creación -->
+                        {{ form.oficios }}
+                    </div>
+                        
+                        <button type="submit" class="btn btn-primary">Guardar Cambios</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+
+
+   
+
+
+
+
+</div>
+
+<!-- Estilos personalizados -->
+<style>
+    
+    .card {
+        border-radius: 10px;
+        overflow: hidden;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .card:hover {
+        transform: translateY(-10px);
+        box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.2);
+    }
+
+    .card-body {
+        background-color: #f9f9f9;
+    }
+
+    .card-title {
+        font-size: 1.2rem;
+        font-weight: bold;
+    }
+
+    .card-text {
+        font-size: 0.9rem;
+        color: #555;
+    }
+
+    .container {
+        margin-top: 30px;
+    }
+
+    .btn-success {
+        margin-top: 20px;
+    }
+
+    .modal-dialog {
+        max-width: 600px;
+    }
+
+    /* Transición suave para el despliegue de los botones */
+    .collapse {
+        transition: height 0.5s ease;
+    }
+</style>
+ 
+
+
+{% endblock %}

@@ -1,0 +1,180 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container-fluid mt-5" style="background-color:rgb(82, 82, 82);width:80%;border-radius:15px;padding:50px;">
+    <div class="row justify-content-center">
+        <div class="col-md-6 text-center bg-light py-4 rounded shadow" style="border: 0px solid #fff;">
+            
+            <div class="profile-image-container mb-3">
+                <img src="{% if tecnico.imagen_perfil %}{{ tecnico.imagen_perfil.url }}{% else %}{% static 'images/default-profile.png' %}{% endif %}" 
+                     alt="Imagen de Perfil" 
+                     class="img-fluid rounded-circle shadow" 
+                     style="width: 250px; height: 250px; object-fit: cover; border: 5px solid #fff;">
+            </div>
+            
+            <h4>{{ tecnico.nombre }}</h4>
+            <p><strong>Email:</strong> {{ email_tecnico }}</p>
+
+        </div>
+        <div class="col-md-6 text-center text-light mt-3 mt-md-0 py-4">
+            
+
+            <div class="mt-4">
+                <h5><strong>Horario Disponible</strong></h5>
+                <table class="table table-bordered table-light text-dark" style="box-shadow: 10px 20px 25px;">
+                    <thead>
+                        <tr>
+                            <th>Día</th>
+                            <th>Horas</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for horario in horarios %}
+                            <tr>
+                                <td>{{ horario.dia }}</td>
+                                <td>Desde {{ horario.horas }}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            
+
+           
+        </div>
+    </div>
+
+    <div style="display: flex; justify-content: space-between; margin-top: 20px;">
+        <div class="col-md-4 mt-4 mt-md-0" style="color: white; display: flex; flex-direction: column; justify-content: flex-start; width: 35%;">
+            <h4 class="text-center text-light">Oficios</h4>
+            <div class="d-flex flex-wrap justify-content-center" style="gap: 15px;">
+                {% for oficio in tecnico.oficios.all %}
+                    <div class="card1">
+                        <div class="card-body">
+                            <p class="card-title">{{ oficio.nombre }}</p>
+                        </div>
+                    </div>
+                {% empty %}
+                    <div class="card1">
+                        <div class="card-body">
+                            <p class="card-title">No tiene oficios asignados.</p>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div style="display: flex; flex-direction: column; align-items: flex-end; width: 55%;">
+            <h4 class="mt-4 text-light" style="text-align: left;">Comunas disponibles para trabajar</h4>
+            <div id="map" style="height: 400px; width: 100%; max-width: 600px; border-radius: 15px; box-shadow: 10px 10px 15px black;"></div>
+        </div>
+    </div>
+
+    <p style="display: flex; justify-content: center; margin-top: 50px;">
+        <strong>Lista de Comunas: </strong>
+        {% for localidad in localidades %}
+            {{ localidad }}{% if not forloop.last %}, {% endif %}
+        {% endfor %}
+    </p>
+    
+</div>
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
+<script>
+    // Inicializar el mapa
+    var map = L.map('map').setView([-33.4489, -70.6693], 10); // Centrar en Santiago
+
+    // Capa de OpenStreetMap
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+    }).addTo(map);
+
+    // Coordenadas de todas las localidades
+    const localidadesCoords = {
+        "Cerrillos": [-33.5018, -70.7143],
+        "Cerro Navia": [﻿-33.416666666667, -70.716666666667],
+        "Conchalí": [-33.3960, -70.6820],
+        "El Bosque": [-33.5483, -70.6693],
+        "Estación Central": [-33.4569, -70.6996],
+        "Huechuraba": [-33.3678, -70.6780],
+        "Independencia": [-33.4190, -70.6520],
+        "La Cisterna": [-33.5275, -70.6790],
+        "La Florida": [-33.5227, -70.5983],
+        "La Granja": [-33.5370, -70.6180],
+        "La Pintana": [-33.5830, -70.6340],
+        "La Reina": [-33.4560, -70.5410],
+        "Las Condes": [-33.4053, -70.5802],
+        "Lo Barnechea": [-33.3510, -70.5170],
+        "Lo Espejo": [-33.5150, -70.6960],
+        "Lo Prado": [-33.4440, -70.7230],
+        "Macul": [-33.4840, -70.5950],
+        "Maipú": [-33.5081, -70.7527],
+        "Ñuñoa": [-33.4569, -70.6032],
+        "Pedro Aguirre Cerda": [-33.4850, -70.6820],
+        "Peñalolén": [-33.4793, -70.5561],
+        "Providencia": [-33.4324, -70.6129],
+        "Pudahuel": [-33.3925, -70.7807],
+        "Quilicura": [-33.3670, -70.7360],
+        "Quinta Normal": [-33.4370, -70.7030],
+        "Recoleta": [-33.4040, -70.6410],
+        "Renca": [-33.4160, -70.7260],
+        "San Joaquín": [-33.4960, -70.6340],
+        "San Miguel": [-33.4965, -70.6483],
+        "San Ramón": [-33.5220, -70.6410],
+        "Santiago": [-33.4489, -70.6693],
+        "Vitacura": [-33.3811, -70.5983]
+    };
+    
+
+    // Localidades del técnico en contexto de JavaScript
+    const localidadesMarcadas = {{ localidades|safe }};
+
+    // Agregar marcadores solo para las localidades del técnico
+    const redIcon = new L.Icon({
+        iconUrl: '{% static "images/icons8-marcador-64.png" %}',
+        iconSize: [30, 30],
+        iconAnchor: [12, 41],
+        popupAnchor: [1, -34]
+    });
+
+    for (const [nombre, coords] of Object.entries(localidadesCoords)) {
+        if (localidadesMarcadas.includes(nombre)) {
+            L.marker(coords, { icon: redIcon }).addTo(map)
+                .bindPopup(nombre);
+        }
+    }
+</script>
+
+<style>
+    .card1 {
+        width: 150px;
+        background-color: #444;
+        border-radius: 8px;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        position: relative;
+        overflow: hidden;
+        transition: transform 0.3s ease, box-shadow 0.3s ease, background-color 0.3s ease;
+    }
+
+    .card1:hover {
+        background-color: #d4af37;
+        transform: translateY(-10px);
+        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+    }
+
+    .card-body {
+        padding: 10px;
+        text-align: center;
+    }
+
+    .card-title {
+        font-size: 16px;
+        color: white;
+    }
+</style>
+
+{% endblock %}

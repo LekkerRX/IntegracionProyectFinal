@@ -1,0 +1,171 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h1>Gestionar Publicaciones</h1>
+
+<!-- Formulario de filtrado -->
+<form method="GET" class="mb-4">
+    <div class="row">
+        <div class="col-md-3">
+            <label for="comuna" class="form-label">Comuna</label>
+            <select class="form-select" name="ubicacion" id="ubicacion">
+                <option value="">-- Todas las comunas --</option>
+                {% for ubicacion in ubicaciones %}
+                    <option value="{{ ubicacion.ubicacion }}" {% if ubicacion.ubicacion == ubicacion_id %}selected{% endif %}>
+                        {{ ubicacion.ubicacion }}
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="col-md-3">
+            <label for="estado" class="form-label">Estado</label>
+            <select name="estado" id="estado" class="form-select">
+                <option value="">Todos los estados</option>
+                <option value="esperando tecnico" {% if estado == "esperando tecnico" %}selected{% endif %}>Esperando Técnico</option>
+                <option value="Publicación Atendida" {% if estado == "Publicación Atendida" %}selected{% endif %}>Publicación Atendida</option>
+            </select>
+        </div>
+
+        <div class="col-md-3">
+            <label for="oficio" class="form-label">Oficio</label>
+            <select name="oficio" id="oficio" class="form-select">
+                <option value="">Todos los oficios</option>
+                {% for oficio in oficios %}
+                    <option value="{{ oficio.id }}" {% if oficio.id == oficio_id %}selected{% endif %}>{{ oficio.nombre }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="col-md-3 d-flex align-items-end">
+            <button type="submit" class="btn btn-primary">Filtrar</button>
+        </div>
+    </div>
+</form>
+
+<div class="table-responsive" style="padding:25px;width:100%;height: auto; margin-top: 100px;background: rgba( 47, 47, 47, 0.3 );
+box-shadow: 0 8px 32px 0 rgba( 31, 38, 135, 0.37 );
+backdrop-filter: blur( 5.5px );
+-webkit-backdrop-filter: blur( 5.5px );
+border-radius: 10px;
+border: 1px solid rgba( 255, 255, 255, 0.18 );">
+<!-- Tabla de publicaciones filtradas -->
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Título</th>
+                <th>Descripción</th>
+                <th>Ubicación</th>
+                <th>Monto Ofrecido</th>
+                <th>Cliente</th>
+                <th>Estado</th>
+                <th>Fecha</th>
+                <th>Visible</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for publicacion in publicaciones %}
+            <tr>
+                <td>{{ publicacion.titulo }}</td>
+                <td>{{ publicacion.descripcion }}</td>
+                <td>{{ publicacion.ubicacion }}</td>
+                <td>${{ publicacion.limite_monto|floatformat:0 }}</td>
+                <td>{{ publicacion.cliente.username }}</td>
+                <td>{{ publicacion.get_estado_display }}</td>
+                <td>{{ publicacion.fecha_publicacion }}</td>
+                <td>{{ publicacion.visible_para_tecnicos|yesno:"Sí,No" }}</td>
+                <td>
+                    <form method="post" style="display: inline;">
+                        {% csrf_token %}
+                        <input type="hidden" name="publicacion_id" value="{{ publicacion.id }}">
+                        <input type="hidden" name="accion" value="toggle_visibility">
+                        
+                    </form>
+                    <button type="button" class="btn btn-warning btn-sm" data-bs-toggle="modal" data-bs-target="#suspendModal" onclick="setSuspendForm('{{ publicacion.id }}')">
+                        Suspender
+                    </button>
+
+                    <button type="button" class="btn btn-danger btn-sm" data-bs-toggle="modal" data-bs-target="#deleteModal" onclick="setDeleteForm('{{ publicacion.id }}')">
+                        Eliminar
+                    </button>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<!-- Modal para Suspensión -->
+<div class="modal fade" id="suspendModal" tabindex="-1" aria-labelledby="suspendModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <form id="suspendForm" method="post">
+            {% csrf_token %}
+            <input type="hidden" name="publicacion_id" id="publicacion_id_suspend">
+            <input type="hidden" name="accion" value="suspend">
+            <div class="modal-content" style="background: rgba( 6, 0, 0, 0.6 );
+box-shadow: 0 8px 32px 0 rgba( 31, 38, 135, 0.37 );
+backdrop-filter: blur( 0px );
+-webkit-backdrop-filter: blur( 0px );
+border-radius: 10px;
+border: 1px solid rgba( 255, 255, 255, 0.18 );">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="suspendModalLabel">Suspender Publicación</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="motivo" class="form-label">Motivo de la suspensión</label>
+                        <textarea name="motivo" id="motivo_suspend" class="form-control" placeholder="Escribe el motivo" required></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                    <button type="submit" class="btn btn-danger">Suspender</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal para eliminación -->
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content" style="background: rgba( 6, 0, 0, 0.5 );
+            box-shadow: 0 8px 32px 0 rgba( 31, 38, 135, 0.37 );
+            backdrop-filter: blur( 0px );
+            -webkit-backdrop-filter: blur( 0px );
+            border-radius: 10px;
+            border: 1px solid rgba( 255, 255, 255, 0.18 );">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteModalLabel">Confirmar Eliminación</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="deleteForm" method="post">
+                    {% csrf_token %}
+                    <input type="hidden" name="publicacion_id" id="publicacion_id">
+                    <input type="hidden" name="accion" value="delete">
+                    <div class="mb-3">
+                        <label for="motivo" class="form-label">Motivo de la eliminación</label>
+                        <textarea name="motivo" id="motivo" class="form-control" placeholder="Escribe el motivo" required></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-danger">Eliminar</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function setDeleteForm(publicacionId) {
+        document.getElementById('publicacion_id').value = publicacionId;
+        document.getElementById('motivo').value = ''; // Limpiar el campo de motivo
+    }
+    function setSuspendForm(publicacionId) {
+        document.getElementById('publicacion_id_suspend').value = publicacionId;
+        document.getElementById('motivo_suspend').value = '';  // Limpiar el campo de motivo
+    }
+</script>
+
+{% endblock %}

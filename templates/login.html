@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block content %}
+
+    
+<div class="container">
+    <div class="row justify-content-center" style="height: 100vh;">
+        <div class="col-12 d-flex align-items-center justify-content-center">
+            <div class="Recuadro" style="height: auto">
+                <h2 class="text-center bg-purple text-white py-2 rounded">Iniciar Sesión</h2>
+                <form method="post" style="background-color:transparent;" >
+                    {% csrf_token %}
+                    <p>{{ form.as_p }}</p>
+                    
+                    <button type="submit" class="btn btn-primary text-white">Iniciar Sesión</button>
+                </form>
+                <h5 class="h5-labels" >No tienes cuenta?<a href="{% url 'User:register' %}">Regístrate</a>
+                    {% comment %} cambiar url de usuario por recuperar {% endcomment %}
+                 Perdiste tu contraseña? <a href="">Recuperar contraseña</a>
+
+            </div>
+        </div>
+    </div>
+    <div class="container mt-4 text-center" >
+        <img  src="{% static 'images/logo.png ' %}" alt="Logo Mediano" class="img-fluid" style="margin-top:-350px;width:250px;height:250px">
+    </div>
+    
+</div>
+{% endblock %}

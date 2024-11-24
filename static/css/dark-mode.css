@@ -1,0 +1,44 @@
+:root {
+    --bg-color-light: #d4d4d4;
+    --text-color-light: #000;
+    --bg-color-dark: #111;
+    --text-color-dark: #eee;
+    --accent-color-light: #800080; /* Púrpura en modo claro */
+    --accent-color-dark: gray;/* Rojo en modo oscuro */
+  }
+  
+  /* Estilos generales para el cuerpo de la página */
+  
+  
+  [data-theme="dark"] {
+    background-color: var(--bg-color-light) !important;
+    color: var(--text-color-dark);
+  }
+  
+  /* Para el tema oscuro */
+  [data-theme="dark"] .RecuadroRegistro {
+    background-color: var(--bg-color-dark) !important;
+    color: var(--text-color-dark);
+    
+  }
+  
+  
+
+  
+  /* Estilos específicos para elementos con la clase .bg-light */
+  [data-theme="dark"] .bg-light {
+    background-color: var(--bg-color-dark) !important;
+  }
+
+  
+  [data-theme="dark"] .accent-color {
+    color: var(--accent-color-dark);
+  }
+  
+ 
+  [data-theme="dark"] .post-headerRight {
+    background-color: var(--bg-color-dark) !important;
+  }
+  [data-theme="light"] .tr-on {
+    color: black; /* Cambio de color de texto a negro en el tema claro */
+}

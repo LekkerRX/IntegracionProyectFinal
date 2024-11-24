@@ -1,0 +1,164 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+{% if messages %}
+    <ul class="messages">
+        {% for message in messages %}
+            <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+        {% endfor %}
+    </ul>
+{% endif %}
+
+<div class="container">
+    <h1 style="color:black;margin-top:55px">Publicaciones Disponibles para Técnicos</h1>
+
+{% if publicaciones %}
+
+    <div class="d-flex justify-content-end mb-3">
+        <!-- Filtros de fecha -->
+        <a href="{% url 'User:publicaciones_tecnico' %}?sort=asc" class="btn btn-primary me-2">Fecha: Ascendente</a>
+        <a href="{% url 'User:publicaciones_tecnico' %}?sort=desc" class="btn btn-primary">Fecha: Descendente</a>
+    </div>
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <!-- Formulario de filtro por comuna -->
+        <form method="GET" action="{% url 'User:publicaciones_tecnico' %}">
+            <label for="comuna" style="color:black; margin-right: 10px;">Filtrar por comuna:</label>
+            <select name="comuna" id="comuna" class="form-select" style="display: inline-block; width: auto;">
+                <option value="">Todas</option>
+                {% for comuna in comunas %}
+                    <option value="{{ comuna }}" {% if comuna == request.GET.comuna %}selected{% endif %}>
+                        {{ comuna }}
+                    </option>
+                {% endfor %}
+            </select>
+            <button type="submit" class="btn btn-primary">Filtrar</button>
+        </form>
+    </div>
+    <div class="d-flex justify-content-end mb-3">
+        <a href="{% url 'User:publicaciones_tecnico' %}?favoritos=true" class="btn btn-secondary me-2">Mostrar Favoritos</a>
+        <a href="{% url 'User:publicaciones_tecnico' %}" class="btn btn-secondary">Mostrar Todos</a>
+    </div>
+    
+    
+
+    <div class="row">
+        {% for publicacion in publicaciones %}
+            <div class="col-md-4 mb-4">
+                <div class="card shadow-lg border-light position-relative">
+                    
+                    <img src="{% if publicacion.imagen %}{{ publicacion.imagen.url }}{% else %}{% static 'images/default-profile.png' %}{% endif %}" alt="Imagen de la publicación" class="card-img-top" style="max-height: 200px; object-fit: cover;">
+                    <div class="card-body">
+                        <p style="color:black"><strong>Creada por:</strong> {{ publicacion.cliente.username }}</p>
+                        <strong style="color:black">Titulo:</strong> 
+                        <h5 class="card-title" style="color:black">{{ publicacion.titulo }}</h5>
+                        <div class="post-content" style="background-color: #cfcfcf;border-radius:15px">
+                            <strong style="color:black">Descripción:</strong> 
+                            <p class="card-text" style="color:black;margin:5px">{{ publicacion.descripcion }}</p>
+                        </div>
+
+                        <p style="color:black"><strong>Límite a pagar:</strong> ${% load l10n %} {{ publicacion.limite_monto|localize }} CLP</p>
+                        <p style="color:black"><strong>Ubicación:</strong> {{ publicacion.ubicacion }}</p>
+                        <p style="color:black; text-transform: uppercase;"><strong>Estado:</strong> {{ publicacion.estado }}</p>
+                        <p style="color:black; text-transform: uppercase;"><strong>Fecha de creación:</strong> {{ publicacion.fecha_publicacion }}</p>
+                        <p style="color:black; text-transform: uppercase;"><strong>Oficios:</strong>
+                            {% for oficio in publicacion.oficios.all %}
+                                {{ oficio.nombre }}{% if not forloop.last %}, {% endif %}
+                            {% endfor %}
+                        </p>
+                       
+                        
+
+
+                        <!-- Botón para postular -->
+                        {% if publicacion.visible_para_tecnicos %}
+                            <form action="{% url 'User:postular_publicacion' publicacion.id %}" method="post">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-success w-100 mt-3">Postular</button>
+                            </form>
+                        {% else %}
+                            <p class="text-muted mt-3">Esta publicación ya no está disponible para postulación.</p>
+                        {% endif %}
+                        <button class="btn btn-warning w-100 mt-3 toggle-favorito" data-id="{{ publicacion.id }}" style="margin-top: 10px;">
+                            {% if publicacion.es_favorito %}
+                                Quitar de Favoritos
+                            {% else %}
+                                Marcar como Favorito
+                            {% endif %}
+                        </button>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+{% else %}
+    <p style="color:black;margin-top:10px">No tenemos trabajos para ti.</p>
+{% endif %}
+
+</div>
+
+<!-- Estilos personalizados -->
+<style>
+    .card {
+        border-radius: 10px;
+        overflow: hidden;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .card:hover {
+        transform: translateY(-10px);
+        box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.2);
+    }
+
+    .card-body {
+        background-color: #f9f9f9;
+    }
+
+    .card-title {
+        font-size: 1.2rem;
+        font-weight: bold;
+    }
+
+    .card-text {
+        font-size: 0.9rem;
+        color: #555;
+    }
+
+    .container {
+        margin-top: 30px;
+    }
+</style>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const botonesFavoritos = document.querySelectorAll('.toggle-favorito');
+
+        botonesFavoritos.forEach(boton => {
+            boton.addEventListener('click', function () {
+                const publicacionId = this.dataset.id;
+
+                fetch(`/toggle-favorito/${publicacionId}/`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': '{{ csrf_token }}',
+                        'Content-Type': 'application/json',
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.es_favorito) {
+                        this.textContent = 'Quitar de Favoritos';
+                        this.classList.add('btn-danger');
+                        this.classList.remove('btn-warning');
+                    } else {
+                        this.textContent = 'Marcar como Favorito';
+                        this.classList.add('btn-warning');
+                        this.classList.remove('btn-danger');
+                    }
+                });
+            });
+        });
+    });
+</script>
+
+
+{% endblock %}

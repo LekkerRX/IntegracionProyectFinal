@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h1>Gestión de Perfiles</h1>
+<table class="table">
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Usuario</th>
+            <th>Correo</th>
+            <th>Estado</th>
+            <th>Acciones</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for perfil in perfiles %}
+        <tr>
+            <td>{{ perfil.id }}</td>
+            <td>{{ perfil.username }}</td>
+            <td>{{ perfil.email }}</td>
+            <td>
+                {% if perfil.is_active %}
+                    Activo
+                {% else %}
+                    Suspendido
+                {% endif %}
+            </td>
+            <td>
+                <a href="{% url 'Administrador:gestionar_perfil' perfil.id %}">Gestionar</a>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

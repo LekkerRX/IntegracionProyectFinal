@@ -1,0 +1,36 @@
+faltantes:
+-2.- se deben pasar los oficios checkeados al checkbox del modal de editar publicacion
+    ## ¿? ni idea ¿?
+
+-1.- arreglar los botones de registro e inicio , eleccion de cliente o tecncio no reacciona al click.
+    ##arreglar area del button.
+
+1.-nose si dejar el nombre para editar.
+    ##??    
+2.-poder elegir horas personalizadas para cada dia.
+    ##??
+3.-el cambiar el correo debería pedir la contraseña, o enviar un correo  , no debería ser solo cambiar por cambiar o nose.
+    ##esto se puede corregir añadiendo un mensaje via email de confirmacion al correo nuevo que el usuario quiere añadir.
+     ##este email va al correo al cual intenta actualizar para confirmar que ese correo realmente es de el.
+4.-al momento de migrar en la nube se debera crear la tabla localidad con las comunas , esto se debe a que no se migra bien.
+    ##esto se puede corregir cambiando de lugar el modelo de localidad a una aplicacion propia llamada localidad y migrar nuevamente.
+
+
+
+
+cuenta cliente 1 :
+
+racimo_estable0o@icloud.com
+
+Sapito321=@
+cuenta cliente 2 :
+
+racimo_estable0o2@icloud.com
+Sapito3211=@
+
+IMPORTANTE QUE SE CIERRE LA SECION SI NO ESTAS EN TU PERFIL.
+
+VALIDAR FOOOOOOORMS.....''''''???¡¡¡¿¿¡??¡
+
+
+notificaciones por orden de llegada, añadir nombre del oficio a verificar a notificaion.

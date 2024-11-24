@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+
+{% block title %}
+Panel de Administrador
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1 class="text-center">Panel de Administrador</h1>
+    <div class="list-group mt-4">
+        <a href="{% url 'Administrador:lista_credenciales' %}" class="list-group-item list-group-item-action">
+            Gestionar Credenciales
+        </a>
+        <a href="{% url 'Administrador:gestionar_publicaciones' %}" class="list-group-item list-group-item-action">
+            Gestionar Publicaciones
+        </a>
+        <a href="{% url 'Administrador:lista_perfiles' %}" class="list-group-item list-group-item-action">
+            Gestionar Perfiles de Usuarios
+        </a>
+    </div>
+</div>
+{% endblock %}

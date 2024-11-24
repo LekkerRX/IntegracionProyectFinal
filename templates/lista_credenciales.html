@@ -1,0 +1,105 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h2 style="color:black">Listado de Credenciales</h2>
+
+<!-- Filtros de búsqueda -->
+<form method="get" class="mb-3">
+    <div class="row">
+        <div class="col">
+            <label for="oficio" style="color:black">Filtrar por Oficio:</label>
+            <select name="oficio" id="oficio" class="form-select">
+                <option value="" style="color:black">Todos</option>
+                {% for oficio in oficios %}
+                    <option value="{{ oficio.id }}" {% if oficio.id == oficio_filter %}selected{% endif %}>{{ oficio.nombre }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col">
+            <label for="fecha" style="color:black">Filtrar por Fecha:</label>
+            <input type="date" name="fecha" id="fecha" class="form-control" value="{{ fecha_filter }}">
+        </div>
+        <div class="col">
+            <button type="submit" class="btn btn-primary">Filtrar</button>
+        </div>
+    </div>
+</form>
+
+<!-- Listado de credenciales -->
+<div class="table-responsive" style="padding:25px;width:100%;height: auto; margin-top: 100px;background: rgba( 47, 47, 47, 0.3 );
+box-shadow: 0 8px 32px 0 rgba( 31, 38, 135, 0.37 );
+backdrop-filter: blur( 5.5px );
+-webkit-backdrop-filter: blur( 5.5px );
+border-radius: 10px;
+border: 1px solid rgba( 255, 255, 255, 0.18 );">  <!-- Este div hace que la tabla tenga scroll horizontal -->
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>Fecha de Subida</th>
+                <th>Técnico</th>
+                <th>Oficio</th>
+                <th>Documento</th>
+                <th>Verificado</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for credencial in credenciales %}
+                <tr>
+                    <td>{{ credencial.fecha_subida }}</td>
+                    <td>{{ credencial.tecnico.nombre }}</td>
+                    <td>{{ credencial.oficio.nombre }}</td>
+                    <td><a href="{{ credencial.documento.url }}" target="_blank">Ver Documento</a></td>
+                    <td>
+                        {% if credencial.verificado %}
+                            <span class="badge bg-success">Verificado</span>
+                            <a href="{% url 'Administrador:rechazar_credencial' credencial.id %}" class="btn btn-danger">Rechazar</a>
+
+                            
+                        {% else %}
+                            <span class="badge bg-warning">No Verificado</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        
+                        <!-- Aquí puedes agregar acciones como "Verificar" o "Deshacer Verificación" -->
+                        {% if not credencial.verificado %}
+                            <a href="{% url 'Administrador:verificar_credencial' credencial.id %}" class="btn btn-success">Verificar</a>
+                            <a href="{% url 'Administrador:rechazar_credencial' credencial.id %}" class="btn btn-danger">Rechazar</a>
+                        {% endif %}
+                    </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>  <!-- Cierre del div de la tabla con scroll -->
+<style>
+    /* Contenedor del icono de notificaciones */
+    .notification-icon-container {
+        position: relative;
+        display: inline-block;
+    }
+
+    /* Estilo para el círculo rojo de notificaciones */
+    .notification-badge {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        background-color: red;
+        color: white;
+        font-size: 10px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border: 2px solid white;
+    }
+
+    /* Estilo para el ícono de la campana */
+    .notification-icon-container i {
+        font-size: 24px; /* Ajusta el tamaño del icono */
+    }
+</style>
+{% endblock %}

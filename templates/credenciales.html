@@ -1,0 +1,72 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+{% if messages %}
+<ul class="messages">
+    {% for message in messages %}
+        <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>
+            {{ message }}
+        </li>
+    {% endfor %}
+</ul>
+{% endif %}
+
+
+    <div class="container">
+        <div class="dada" style="width:100%;height: auto; margin-top: 100px;background: rgba( 47, 47, 47, 0.35 );
+box-shadow: 0 8px 32px 0 rgba( 31, 38, 135, 0.37 );
+backdrop-filter: blur( 0px ); 
+-webkit-backdrop-filter: blur( 0px );
+border-radius: 10px;
+border: 1px solid rgba( 255, 255, 255, 0.18 );">
+        <h2>Subir Credencial</h2>
+        <!-- credenciales.html -->
+        <form method="POST" enctype="multipart/form-data">
+            {% csrf_token %}
+            {{ form.as_p }}
+
+           
+            
+            <button type="submit" class="btn btn-primary btn-lg">Subir Credencial</button>
+        </form>
+
+    </div>
+
+<style>
+    /* Asegurémonos de que el campo de archivo tenga un tamaño adecuado y un buen aspecto */
+.custom-file-input {
+    padding: 10px;
+    font-size: 14px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    background-color: #f9f9f9;
+    width: 100%;  /* Hace que el campo de archivo ocupe todo el ancho del contenedor */
+    cursor: pointer; /* Para que el cursor cambie al pasar sobre el campo */
+}
+
+.custom-file-input:hover {
+    background-color: #e2e2e2; /* Cambia el fondo al pasar el cursor */
+}
+
+/* Para los textos dentro del campo, en caso de que el campo se haya seleccionado */
+.custom-file-input:focus {
+    outline: none;  /* Elimina el borde azul por defecto */
+    border-color: #007bff; /* Cambia el color del borde al enfocar el campo */
+}
+
+/* Opcional: Cambiar el aspecto del botón dentro del campo de archivo */
+.custom-file-input::file-selector-button {
+    background-color: #007bff;
+    color: white;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.custom-file-input::file-selector-button:hover {
+    background-color: #0056b3;
+}
+</style>
+{% endblock %}
