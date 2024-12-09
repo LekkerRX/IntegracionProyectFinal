@@ -34,3 +34,18 @@ VALIDAR FOOOOOOORMS.....''''''???¡¡¡¿¿¡??¡
 
 
 notificaciones por orden de llegada, añadir nombre del oficio a verificar a notificaion.
+
+
+CORRRREEEEEEEGIIIIIIIIIIIIR
+
+
+2.-ELEGIR HORAS PERSONALIZADAS PARA LOS DIAS
+
+
+3.- configurar paginas de error y espera de mercado pago en premium y creacion de referencia views.py
+
+4.- report de admin 
+
+
+
+

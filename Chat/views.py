@@ -54,11 +54,12 @@ from firebase_admin import db
 from datetime import datetime
 from django.contrib.auth.models import User
 
-from django.contrib.auth.decorators import login_required
+from django.shortcuts import render, get_object_or_404
 from django.http import JsonResponse
-from django.shortcuts import render
-from datetime import datetime
+from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
+from Reseñas.models import Reseña  # Modelo de reseñas
+from datetime import datetime
 from firebase_admin import db
 
 @login_required
@@ -68,48 +69,57 @@ def detalle_chat(request, chat_id):
 
     # Verificar si el chat existe y si el usuario tiene acceso
     chat_data = chat_ref.get()
-    if chat_data:
-        cliente_id = chat_data.get('cliente')
-        tecnico_id = chat_data.get('tecnico')
-
-        # Verificar que el usuario esté relacionado con el chat
-        if str(request.user.id) != cliente_id and str(request.user.id) != tecnico_id:
-            return JsonResponse({"error": "Acceso no autorizado."}, status=403)
-    else:
+    if not chat_data:
         return JsonResponse({"error": "Chat no encontrado."}, status=404)
 
-    # Obtener los mensajes desde Firebase, ordenados por fecha
+    cliente_id = chat_data.get('cliente')
+    tecnico_id = chat_data.get('tecnico')
+    publicacion_id = chat_data.get('publicacion')
+    
+    
+
+    # Verificar que el usuario esté relacionado con el chat
+    if str(request.user.id) not in [cliente_id, tecnico_id]:
+        return JsonResponse({"error": "Acceso no autorizado."}, status=403)
+
+    # Obtener los mensajes desde Firebase
     mensajes_ref = chat_ref.child("mensajes")
     mensajes = mensajes_ref.order_by_child('fecha').get() or {}
 
     # Manejar el envío de un mensaje
-    if request.method == 'POST':
+    if request.method == 'POST' and request.POST.get('contenido'):
         contenido = request.POST.get('contenido')
-        if contenido:
-            mensaje_data = {
-                'contenido': contenido,
-                'remitente': str(request.user.id),
-                'remitente_nombre': request.user.username,
-                'fecha': datetime.now().isoformat()  # Usar la fecha actual en formato ISO
-            }
-            # Agregar el mensaje a Firebase
-            mensajes_ref.push(mensaje_data)
+        mensaje_data = {
+            'contenido': contenido,
+            'remitente': str(request.user.id),
+            'remitente_nombre': request.user.username,
+            'fecha': datetime.now().isoformat()
+        }
+        mensajes_ref.push(mensaje_data)
+        mensajes = mensajes_ref.order_by_child('fecha').get() or {}
 
-            # Obtener nuevamente los mensajes después de agregar el nuevo
-            mensajes = mensajes_ref.order_by_child('fecha').get() or {}
+    # Manejar el envío de una reseña desde el modal
+    if request.method == 'POST' and 'calificacion' in request.POST:
+        calificacion = request.POST.get('calificacion')
+        comentario = request.POST.get('comentario', '')
+
+        # Validar que los datos son válidos
+        if calificacion and cliente_id == str(request.user.id):
+            tecnico = get_object_or_404(User, id=tecnico_id).perfil_tecnico
+            Reseña.objects.create(
+                cliente=request.user,
+                tecnico=tecnico,
+                publicacion_id=publicacion_id,
+                calificacion=int(calificacion),
+                comentario=comentario,
+            )
+            return JsonResponse({"success": "Reseña enviada correctamente."}, status=200)
 
     # Obtener los nombres de cliente y técnico
-    try:
-        cliente = User.objects.get(id=cliente_id)
-    except User.DoesNotExist:
-        cliente = None
+    cliente = get_object_or_404(User, id=cliente_id)
+    tecnico = get_object_or_404(User, id=tecnico_id)
 
-    try:
-        tecnico = User.objects.get(id=tecnico_id)
-    except User.DoesNotExist:
-        tecnico = None
-
-    # Crear una lista de mensajes con los nombres de los remitentes
+    # Crear una lista de mensajes con nombres
     mensajes_con_nombres = []
     for mensaje in mensajes.values():
         usuario_id = mensaje['remitente']
@@ -120,13 +130,15 @@ def detalle_chat(request, chat_id):
             mensaje['remitente_nombre'] = 'Usuario desconocido'
         mensajes_con_nombres.append(mensaje)
 
-    # Renderizar la página del chat con los mensajes actuales
+    # Renderizar la página del chat con los mensajes y datos del chat
     return render(request, 'detalle_chat.html', {
         'chat': chat_data,
         'mensajes': mensajes_con_nombres,
-        'chat_id': chat_id,  # Pasamos el chat.id al contexto
-        'cliente_nombre': cliente.username if cliente else 'Cliente desconocido',
-        'tecnico_nombre': tecnico.username if tecnico else 'Técnico desconocido'
+        'chat_id': chat_id,
+        'tecnico_id': tecnico_id,
+        'publicacion_id': publicacion_id,
+        'cliente_nombre': cliente.username,
+        'tecnico_nombre': tecnico.username,
     })
 
 
@@ -150,21 +162,15 @@ from django.contrib.auth.models import User
 from firebase_admin import db
 
 @login_required
-def detalle_chat_tecnico(request, chat_id):
+def detalle_chat_tecnico(request, chat_id, tecnico_id):
     # Referencia al chat en Firebase
     chat_ref = db.reference(f"chats/{chat_id}")
     print(f"Chat ID recibido: {chat_id}")  # Verifica el valor del ID recibido
+    print(f"Tecnico ID recibido: {tecnico_id}")  # Verifica el tecnico_id pasado en la URL
 
-    # Verificar si el chat existe y si el usuario tiene acceso
+    # Verificar si el chat existe
     chat_data = chat_ref.get()
-    if chat_data:
-        cliente_id = chat_data.get('cliente')
-        tecnico_id = chat_data.get('tecnico')
-        
-        # Verificar que el usuario esté relacionado con el chat y que sea un técnico
-        if str(request.user.id) != tecnico_id:
-            return JsonResponse({"error": "Acceso no autorizado."}, status=403)
-    else:
+    if not chat_data:
         return JsonResponse({"error": "Chat no encontrado."}, status=404)
 
     # Obtener los mensajes desde Firebase
@@ -187,13 +193,16 @@ def detalle_chat_tecnico(request, chat_id):
             mensajes = mensajes_ref.order_by_child('fecha').get() or {}
 
     # Obtener los nombres de cliente y técnico
+    cliente_id = chat_data.get('cliente')
+    tecnico_id_chat = chat_data.get('tecnico')
+
     try:
         cliente = User.objects.get(id=cliente_id)
     except User.DoesNotExist:
         cliente = None
 
     try:
-        tecnico = User.objects.get(id=tecnico_id)
+        tecnico = User.objects.get(id=tecnico_id_chat)  # Usar tecnico_id_chat
     except User.DoesNotExist:
         tecnico = None
 
@@ -216,6 +225,7 @@ def detalle_chat_tecnico(request, chat_id):
         'cliente_nombre': cliente.username if cliente else 'Cliente desconocido',
         'tecnico_nombre': tecnico.username if tecnico else 'Técnico desconocido'
     })
+
 
 
 

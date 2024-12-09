@@ -14,7 +14,12 @@ max-height: 500px;
 overflow-y: auto; 
 padding: 10px;">
 <h1>Chat con  {{ tecnico_nombre }} (Tecnico)</h1>
+
+
 </div>
+
+<div id="estado-pago" style="margin: 15px; font-size: 1.2em; color: red;"></div>
+
 <div id="chat-box" style="background: rgba( 0, 0, 0, 0.8 );
 box-shadow: 0 8px 32px 0 rgba( 31, 38, 135, 0.37 );
 backdrop-filter: blur( 0px );
@@ -35,8 +40,77 @@ padding: 10px;min-height: 300px;   ">
     <button type="submit" class="btn btn-primary mt-2">Enviar</button>
 </form>
 
+<!-- Botón para pagar con Mercado Pago -->
+<div style="margin-top: 20px;">
+    <button id="pagar" class="btn btn-success" style="display: none;">Pagar ahora</button>
+
+</div>
+
+<!-- Modal para formulario de reseñas -->
+<div class="modal fade" id="modalResena" tabindex="-1" aria-labelledby="modalResenaLabel" aria-hidden="true" style="color:black">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="modalResenaLabel">Dejar una Reseña</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+        </div>
+        <div class="modal-body">
+            <form method="POST" action="{% url 'User:dejar_resena' tecnico_id %}">
+                {% csrf_token %}
+                <input type="hidden" name="chat_id" value="{{ chat_id }}">
+                <input type="hidden" name="publicacion_id" value="{{ publicacion_id }}">
+
+                <div class="mb-3">
+                    <label for="calificacion" class="form-label">Calificación (1-5):</label>
+                    <select id="calificacion" name="calificacion" class="form-select" required>
+                        <option value="1">1 - Muy Malo</option>
+                        <option value="2">2 - Malo</option>
+                        <option value="3">3 - Regular</option>
+                        <option value="4">4 - Bueno</option>
+                        <option value="5">5 - Excelente</option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label for="comentario" class="form-label">Comentario:</label>
+                    <textarea id="comentario" name="comentario" class="form-control" rows="4" required></textarea>
+                </div>
+                <button type="submit" class="btn btn-success">Enviar Reseña</button>
+            </form>
+            
+        </div>
+      </div>
+    </div>
+</div>
+
+<div style="margin-top: 20px;">
+    <button id="boton-modal" class="btn btn-info" data-bs-toggle="modal" data-bs-target="#modalResena" style="display: none;">Dejar una reseña</button>
+</div>
+
+
 <script type="module">
+
+    document.getElementById('boton-modal').addEventListener('click', function () {
+        const modal = new bootstrap.Modal(document.getElementById('modalResena'));
+        modal.show();
+    });
     // Función para formatear la fecha
+    document.getElementById('pagar').onclick = function() {
+        const tecnicoId = "{{ tecnico_id }}";  // Obtener el ID del técnico desde el contexto
+        const publicacionId = "{{ publicacion_id }}";  // Obtener el ID de la publicación desde el contexto
+        const chatId ="{{chat_id}}"
+
+        fetch(`/crear-preferencia/${tecnicoId}/${publicacionId}/${chatId}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.checkout_url) {
+                    window.location.href = data.checkout_url; // Redirigir al checkout
+                } else {
+                    console.error('Error al generar el link de pago:', data.error);
+                }
+            })
+            .catch(error => console.error('Error:', error));
+    };
+    
     function formatearFecha(fecha) {
         const date = new Date(fecha); // Crear objeto Date
         const dia = date.getDate().toString().padStart(2, '0'); // Obtener el día
@@ -46,6 +120,8 @@ padding: 10px;min-height: 300px;   ">
         const minutos = date.getMinutes().toString().padStart(2, '0'); // Obtener los minutos
         return `${dia}-${mes}-${anio} ${horas}:${minutos}`; // Retornar fecha completa con hora
     }
+    
+
 
     // Iterar sobre los mensajes y formatear las fechas al cargar la página
     document.querySelectorAll('.fecha').forEach(function(elemento) {
@@ -55,7 +131,7 @@ padding: 10px;min-height: 300px;   ">
 
     // Importar las funciones necesarias de Firebase
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
-    import { getDatabase, ref, onChildAdded, push } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-database.js";
+    import { getDatabase, ref, onChildAdded, push, onValue } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-database.js";
 
     // Configuración de Firebase
     const firebaseConfig = {
@@ -75,6 +151,7 @@ padding: 10px;min-height: 300px;   ">
     
     const chatId = "{{ chat_id }}";  // Este sería el ID del chat actual
     const mensajesRef = ref(db, `chats/${chatId}/mensajes`);
+    const pagoRef = ref(db, `chats/${chatId}/pagado`);
 
     // Función para agregar un mensaje al chat
     function agregarMensaje(mensaje) {
@@ -107,6 +184,27 @@ padding: 10px;min-height: 300px;   ">
         mensajesDiv.appendChild(mensajeDiv);
         mensajesDiv.scrollTop = mensajesDiv.scrollHeight; // Hacer scroll al último mensaje
     }
+    // Función para mostrar el estado del pago
+    function mostrarPago(pago) {
+        const pagoDiv = document.getElementById('estado-pago');
+        const pagarBoton = document.getElementById('pagar');
+        const botonModal = document.getElementById('boton-modal'); // Botón de dejar reseña
+    
+        if (pago && pago === true) {
+            pagoDiv.textContent = "¡El pago ha sido realizado!";
+            pagoDiv.style.color = "green";
+            pagarBoton.style.display = "none"; // Oculta el botón de pagar
+            botonModal.style.display = "block"; // Muestra el botón de dejar reseña
+        } else {
+            pagoDiv.textContent = "Aún no se ha realizado el pago.";
+            pagoDiv.style.color = "red";
+            pagarBoton.style.display = "block"; // Muestra el botón de pagar
+            botonModal.style.display = "none"; // Oculta el botón de dejar reseña
+        }
+    }
+    
+    
+
 
     // Escuchar mensajes en tiempo real
     onChildAdded(mensajesRef, function(snapshot) {
@@ -114,6 +212,13 @@ padding: 10px;min-height: 300px;   ">
         console.log("Mensaje recibido:", mensaje); // Log para depurar
         agregarMensaje(mensaje); // Llamar a la función para agregar el mensaje con fecha formateada
     });
+    // Escuchar el estado del pago en tiempo real
+    onValue(pagoRef, function(snapshot) {
+        const pago = snapshot.val();
+        console.log("Estado de pago:", pago); // Log para depurar
+        mostrarPago(pago); // Actualiza el mensaje y visibilidad del botón
+    });
+    
 
     // Manejar el envío de un mensaje
     document.getElementById('chatForm').addEventListener('submit', function(event) {

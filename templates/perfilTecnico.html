@@ -17,10 +17,24 @@
     
     <div class="row justify-content-center" style="">
         <!-- Botón para abrir el modal de chats activos -->
+           <!-- Botón para comprar Premium solo si no es Premium -->
+        {% if not tecnico.es_premium %}
+           <a href="{% url 'User:premium' %}" class="btn btn-success">
+               PREMIUM
+           </a>
+       {% endif %}
+           
         <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#chatModal">
             Herramientas
         </button>
+          <!-- Insignia de Premium -->
+ 
         <div class="col-md-6 text-center bg-light py-4 rounded shadow" style="border: 0px solid #fff;">
+            {% if tecnico.es_premium %}
+            <div class="premium-badge">
+                <img src="{% static 'images/crown.png' %}" alt="Premium" style="width: 50px; height: auto;"/>
+            </div>
+        {% endif %}
             
             <div class="profile-image-container mb-3" >
                 <img src="{% if tecnico.imagen_perfil %}{{ tecnico.imagen_perfil.url }}{% else %}{% static 'images/default-profile.png' %}{% endif %}" 
@@ -33,6 +47,22 @@
             <div id="id_notificacion" style="display:none;">Formulario enviado con éxito</div>
             <h4>{{ nombre_tecnico }}</h4> 
             <p><strong>Email:</strong> {{ email }}</p>
+            <h5><strong>Promedio de Calificación</strong></h5>
+            <div class="rating">
+                {% comment %} Calculamos las estrellas completas y vacías {% endcomment %}
+                <div class="rating">
+                    {% with promedio_completo=promedio_calificacion|floatformat:0 %}
+                        {% for i in 1..promedio_completo %}
+                            <span class="star">&#9733;</span>  {# Estrella llena #}
+                        {% endfor %}
+                        {% for i in promedio_completo..4 %}
+                            <span class="star">&#9734;</span>  {# Estrella vacía #}
+                        {% endfor %}
+                    {% endwith %}
+                </div>
+                
+            </div>
+            <p>Promedio: {{ promedio_calificacion|floatformat:1 }} estrellas</p>
         </div>
         
 
@@ -98,7 +128,8 @@ border-radius: 10px;">
                                                 {% endif %}
                                                <span>- <strong>Titulo publicación:</strong> {{ chat.publicacion.titulo }}</span>
                                                <span>- <strong>Creado el:</strong> {{ chat.creado_en|date:"d M Y H:i" }}</span>
-                                                <a class="btn btn-secondary" href="{% url 'Chat:detalle_chat_tecnico' chat.id %}">Ir al chat</a>
+                                               <a class="btn btn-secondary" href="{% url 'Chat:detalle_chat_tecnico' chat.id tecnico_id %}">Ir al chat</a>
+                                               id{{ tecnico_id }}
                                             </li>
                                         </div>
                                         {% endfor %}
@@ -286,12 +317,45 @@ border: 1px solid rgba( 255, 255, 255, 0.18 );">
     <p style="display: flex; justify-content: center;margin-top:50px"><strong>Lista de Comunas: " </strong> {% for localidad in localidades %}{{ localidad }}{% if not forloop.last %}, {% endif %}{% endfor %}"</p>
     
 </div>
+<!-- Sección de Reseñas -->
+<div class="reviews-section mt-5">
+    <h4 class="text-center text-light">Reseñas de los Usuarios</h4>
+    
+    <div class="reviews-list mt-4">
+        {% if reseñas %}
+            {% for reseña in reseñas %}
+                <div class="review-card">
+                    <div class="review-header">
+                        <p><strong>Nombre: {{ reseña.cliente.username }}</strong></p>
+                        <p class="rating">
+                            {% for i in reseña.estrellas %}
+                                <span class="star">&#9733;</span>
+                            {% endfor %}
+                        </p>
+                    </div>
+                    <p class="review-comment">{{ reseña.comentario }}</p>
+      
+                    <p class="text-muted" style="font-size: 0.875rem;">
+                        <small>Publicado el {{ reseña.fecha|date:"d M Y, H:i" }}</small>
+                    </p>
+                    
+                    {% if reseña.cliente == request.user %}
+                        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#editReviewModal" data-reseña-id="{{ reseña.id }}" data-comentario="{{ reseña.comentario }}" data-estrellas="{{ reseña.estrellas }}">Editar Reseña</button>
+                    {% endif %}
+                </div>
+            {% endfor %}
+        {% else %}
+            <p class="text-center text-light">Aún no hay reseñas para este técnico.</p>
+        {% endif %}
+    </div>
+</div>
 
 
 <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 
 <script>
+    
     // Inicializar el mapa
     var map = L.map('map').setView([-33.4489, -70.6693], 10); // Centrar en Santiago
 
@@ -336,7 +400,8 @@ border: 1px solid rgba( 255, 255, 255, 0.18 );">
         "Santiago": [-33.4489, -70.6693],
         "Vitacura": [-33.3811, -70.5983],
         "Puente Alto":[-33.6166667, -70.583333],
-        "San Bernardo": [-33.611111, -70.607778]
+        "San Bernardo": [-33.611111, -70.607778],
+        "Santiago Centro": [-33.45, -70.666666666667]
         
     };
     
@@ -358,8 +423,67 @@ border: 1px solid rgba( 255, 255, 255, 0.18 );">
                 .bindPopup(nombre);
         }
     }
+
 </script>
 <style>
+    /* Reseñas */
+    .reviews-section {
+        background-color: #333;
+        padding: 30px;
+        border-radius: 8px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    }
+
+    .reviews-list {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+    }
+
+    .review-card {
+        background-color: #444;
+        padding: 20px;
+        border-radius: 8px;
+        color: #fff;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+    }
+
+    .review-card .review-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .review-card .review-header p {
+        margin: 0;
+    }
+
+    .review-card .rating {
+        color: #f1c40f;
+    }
+
+    .review-card .star {
+        font-size: 18px;
+        margin-right: 2px;
+    }
+
+    .review-comment {
+        margin-top: 10px;
+        font-size: 14px;
+        line-height: 1.6;
+    }
+    .text-muted {
+        color: #bbb !important;
+    }
+    
+    .text-muted small {
+        font-size: 0.875rem;
+    }
+    button {
+        margin-top: 10px;
+        font-size: 0.875rem;
+    }
+    
     .card1 {
         width: 150px;
         background-color: #444;

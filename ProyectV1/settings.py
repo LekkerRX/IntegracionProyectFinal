@@ -54,6 +54,9 @@ INSTALLED_APPS = [
     'Chat',
     'Favoritos',
     'gestionHistorial',
+    'Reseñas',
+    'ventasPremium',
+    'ventasPublicaciones'
     
  
     
@@ -105,6 +108,7 @@ DATABASES = {
         'PORT': '5432',  # El puerto de PostgreSQL, que es el predeterminado
     }
 }
+
 
 
 

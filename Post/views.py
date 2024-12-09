@@ -148,7 +148,7 @@ def aceptar_tecnico(request):
 
         chat_ref.child(str(chat_id)).set({
             'cliente': str(publicacion.cliente.id),
-            'tecnico': str(tecnico_user.id),
+            'tecnico': str(tecnico_id),
             'publicacion': str(publicacion.id),
             'mensajes': {}  # Inicializar sin mensajes
         })

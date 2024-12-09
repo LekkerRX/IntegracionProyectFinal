@@ -15,6 +15,10 @@ urlpatterns = [
     path('lista_perfiles/', views.lista_perfiles, name='lista_perfiles'),
     path('gestionar_perfil/<int:usuario_id>/', views.gestionar_perfil, name='gestionar_perfil'),
     path('panel/', views.panel_administrador, name='panel_administrador'),
+    path('reseñas/', views.panel_administracion_reseñas, name='panel_administracion_reseñas'),
+    path('reseñas/editar/<int:reseña_id>/', views.editar_reseña, name='editar_reseña'),
+    path('reseñas/eliminar/<int:reseña_id>/', views.eliminar_reseña, name='eliminar_reseña'),
+    path('reporte_ventas_premium/', views.reporte_ventas_premium, name='reporte_ventas_premium'),
     
 ]
 

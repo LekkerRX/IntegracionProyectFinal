@@ -322,3 +322,109 @@ from django.shortcuts import render
 @staff_member_required
 def panel_administrador(request):
     return render(request, 'panel_administrador.html')
+
+from django.shortcuts import render, get_object_or_404, redirect
+from Reseñas.models import Reseña
+from django.contrib import messages
+
+
+
+def panel_administracion_reseñas(request):
+    técnicos = User.objects.filter(perfil_tecnico=True)  # Asegúrate de que `profile__is_tecnico` sea correcto
+    reseñas = Reseña.objects.all()
+    
+    # Filtrar por técnico
+    if request.GET.get('tecnico'):
+        reseñas = reseñas.filter(tecnico_id=request.GET.get('tecnico'))
+    
+    # Filtrar por calificación
+    if request.GET.get('calificacion'):
+        reseñas = reseñas.filter(calificacion=request.GET.get('calificacion'))
+    
+    # Filtrar por fecha
+    if request.GET.get('fecha'):
+        reseñas = reseñas.filter(fecha__date=request.GET.get('fecha'))
+    
+    return render(request, 'panel_reseñas.html', {
+        'reseñas': reseñas,
+        'técnicos': técnicos,
+    })
+
+
+
+def editar_reseña(request, reseña_id):
+    reseña = get_object_or_404(Reseña, id=reseña_id)
+
+    if request.method == 'POST':
+        comentario = request.POST.get('comentario', reseña.comentario)
+        calificacion = request.POST.get('calificacion', reseña.calificacion)
+
+        # Validar calificación
+        if not comentario.strip():
+            messages.error(request, "El comentario no puede estar vacío.")
+        elif not calificacion.isdigit() or not (1 <= int(calificacion) <= 5):
+            messages.error(request, "La calificación debe ser un número entre 1 y 5.")
+        else:
+            reseña.comentario = comentario
+            reseña.calificacion = int(calificacion)
+            reseña.save()
+            messages.success(request, "Reseña actualizada correctamente.")
+            return redirect('Administrador:panel_administracion_reseñas')
+
+    return render(request, 'editar_reseña.html', {'reseña': reseña})
+
+def eliminar_reseña(request, reseña_id):
+    reseña = get_object_or_404(Reseña, id=reseña_id)
+    if request.method == 'POST':
+        cliente = reseña.cliente
+        reseña.delete()
+
+        # Enviar notificación al cliente (a implementar)
+        messages.success(request, f"Reseña eliminada correctamente y el cliente ha sido notificado.")
+        return redirect('Administrador:panel_administracion_reseñas')
+
+    return render(request, 'eliminar_reseña.html', {'reseña': reseña})
+
+
+from django.shortcuts import render
+from django.db.models import Sum
+from django.utils.timezone import now
+from ventasPremium.models import VentasPremium
+from datetime import timedelta
+
+from django.db.models import Sum
+from django.shortcuts import render
+from datetime import datetime
+from ventasPremium.models import VentasPremium
+from ventasPublicaciones.models import VentasPublicaciones
+
+def reporte_ventas_premium(request):
+    # Obtener el mes actual y el año actual
+    mes_actual = datetime.now().month
+    año_actual = datetime.now().year
+    
+    # Filtrar las ventas premium realizadas en el mes actual
+    ventas_premium_mes = VentasPremium.objects.filter(fecha__year=año_actual, fecha__month=mes_actual)
+    
+    # Filtrar las ventas de publicaciones realizadas en el mes actual
+    ventas_publicaciones_mes = VentasPublicaciones.objects.filter(fecha__year=año_actual, fecha__month=mes_actual)
+    
+    # Calcular el total de ventas y el monto total para las ventas premium
+    total_ventas_premium = ventas_premium_mes.count()
+    total_monto_premium = ventas_premium_mes.aggregate(Sum('cantidad_pago'))['cantidad_pago__sum'] or 0
+    
+    # Calcular el total de ventas y el monto total para las ventas de publicaciones
+    total_ventas_publicaciones = ventas_publicaciones_mes.count()
+    total_monto_publicaciones = ventas_publicaciones_mes.aggregate(Sum('monto_pagado'))['monto_pagado__sum'] or 0
+
+    # Preparar los datos para mostrarlos en la plantilla
+    context = {
+        'ventas_premium_mes': ventas_premium_mes,
+        'total_ventas_premium': total_ventas_premium,
+        'total_monto_premium': total_monto_premium,
+        'ventas_publicaciones_mes': ventas_publicaciones_mes,
+        'total_ventas_publicaciones': total_ventas_publicaciones,
+        'total_monto_publicaciones': total_monto_publicaciones,
+    }
+    
+    return render(request, 'reporte_ventas_premium.html', context)

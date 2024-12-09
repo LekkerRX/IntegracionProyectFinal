@@ -24,6 +24,7 @@ class Localidad(models.Model):
 
 class Tecnico(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='perfil_tecnico')
+    access_token = models.CharField(max_length=255, blank=True, null=True, help_text="Access token del técnico para Mercado Pago")
     nombre = models.CharField(max_length=100)
     ubicacion = models.CharField(max_length=100)
     horario_disponible = models.CharField(max_length=100)
@@ -32,6 +33,7 @@ class Tecnico(models.Model):
     oficios = models.ManyToManyField(Oficio, related_name='tecnicos', blank=True)
     localidades = models.CharField(max_length=200, help_text="Localidades en las que opera")
     validado = models.BooleanField(default=False)
+    es_premium = models.BooleanField(default=False)
     imagen_perfil = models.ImageField(upload_to='imagenes_perfil/', default='imagenes_perfil/default-profile.png')  # Campo para la imagen de perfil
 
     def __str__(self):

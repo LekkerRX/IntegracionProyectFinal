@@ -1,0 +1,97 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}
+    Beneficios Premium
+{% endblock %}
+
+{% block content %}
+    <style>
+        /* Estilo base para el contenedor */
+        .scroll-container {
+            overflow: hidden; /* Oculta la parte de la imagen que sobresale */
+        }
+
+        /* Estilo base para la imagen */
+        .scrolling-image {
+            width: 100%; /* Ajusta la imagen al tamaño del contenedor */
+            height: 400px; /* Ajusta la altura de la imagen */
+        }
+
+        /* Estilo para la sección de beneficios */
+        .premium-section {
+            padding: 20px;
+            background-color: #f8f9fa; /* Color de fondo claro */
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .premium-section h1 {
+            font-size: 2rem;
+            margin-bottom: 20px;
+        }
+
+        .premium-section p {
+            font-size: 1.1rem;
+            margin-bottom: 15px;
+        }
+
+        .premium-section ul {
+            list-style-type: none;
+            padding-left: 0;
+        }
+
+        .premium-section ul li {
+            font-size: 1.1rem;
+            margin-bottom: 10px;
+        }
+
+        .premium-section .btn {
+            margin-top: 20px;
+        }
+
+        /* Estilo solo para dispositivos móviles */
+        @media (max-width: 768px) {
+            .scrolling-image {
+                animation: scroll-horizontal 10s linear infinite;
+            }
+
+            @keyframes scroll-horizontal {
+                0% {
+                   
+                }
+                100% {
+          
+                }
+            }
+        }
+    </style>
+
+    <div class="row">
+        <!-- Columna de la imagen -->
+        <div class="col-md-6">
+            <div class="scroll-container">
+                <img src="{% static 'images/premium.png' %}" 
+                     alt="Logo Premium" 
+                     class="img-fluid scrolling-image">
+            </div>
+        </div>
+
+        <!-- Columna de los beneficios Premium -->
+        <div class="col-md-6">
+            <div class="premium-section" style="color:black">
+                <h1>Descubre los Beneficios de Premium</h1>
+                <p>Con Premium, accede a herramientas exclusivas que te ayudarán a destacar y conseguir más oportunidades.</p>
+                <ul>
+                    <li>Postulaciones ilimitadas.</li>
+                    <li>Chat de soporte personal.</li>
+                    <li>Insignias premium.</li>
+                    <li>Notificaciones exlusivas.</li>
+                </ul>
+                <a href="{{ checkout_url }}" class="btn btn-primary mt-3">Comprar Premium</a>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+

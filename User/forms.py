@@ -518,3 +518,13 @@ class ClientRegistrationForm(forms.Form):
         )
         return user
 
+from django import forms
+from Reseñas.models import Reseña
+
+class ReseñaForm(forms.ModelForm):
+    class Meta:
+        model = Reseña
+        fields = ['calificacion', 'comentario']  # Permitir al cliente editar solo calificación y comentario
+        widgets = {
+            'calificacion': forms.Select(choices=[(i, i) for i in range(1, 6)]),  # Opciones de calificación de 1 a 5
+        }

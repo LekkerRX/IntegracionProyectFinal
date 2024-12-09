@@ -1,0 +1,97 @@
+
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1 class="text-center">Reseñas</h1>
+    
+    <!-- Formulario de filtro -->
+    <form method="GET" class="mb-4">
+        <div class="row">
+          
+            <div class="col-md-4">
+                <label for="calificacion" class="form-label">Filtrar por Calificación</label>
+                <select name="calificacion" id="calificacion" class="form-select">
+                    <option value="">--Seleccionar Calificación--</option>
+                    <option value="1" {% if request.GET.calificacion == "1" %}selected{% endif %}>1</option>
+                    <option value="2" {% if request.GET.calificacion == "2" %}selected{% endif %}>2</option>
+                    <option value="3" {% if request.GET.calificacion == "3" %}selected{% endif %}>3</option>
+                    <option value="4" {% if request.GET.calificacion == "4" %}selected{% endif %}>4</option>
+                    <option value="5" {% if request.GET.calificacion == "5" %}selected{% endif %}>5</option>
+                </select>
+            </div>
+            <div class="col-md-4">
+                <label for="fecha" class="form-label">Filtrar por Fecha</label>
+                <input type="date" name="fecha" id="fecha" class="form-control" value="{{ request.GET.fecha }}">
+            </div>
+        </div>
+        <button type="submit" class="btn btn-primary mt-3">Filtrar</button>
+    </form>
+    
+    <table class="table table-dark table-striped mt-4">
+        <thead>
+            <tr>
+                <th scope="col">Técnico</th>
+                <th scope="col">Cliente</th>
+                <th scope="col">Calificación</th>
+                <th scope="col">Comentario</th>
+                <th scope="col">Fecha</th>
+                <th scope="col">Acciones</th>
+                <th scope="col">Eliminar</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for reseña in reseñas %}
+            <tr>
+                <td>{{ reseña.tecnico.nombre }}</td>
+                <td>{{ reseña.cliente.username }}</td>
+                <td>{{ reseña.calificacion }}</td>
+                <td>{{ reseña.comentario }}</td>
+                <td>{{ reseña.fecha }}</td>
+                <td>
+                    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalEditarResena{{ reseña.id }}">
+                        Editar
+                    </button>
+                    <!-- Modal para editar reseña -->
+                    <div class="modal fade" id="modalEditarResena{{ reseña.id }}" tabindex="-1" aria-hidden="true">
+                        <div class="modal-dialog">
+                            <div class="modal-content" style="color:black">
+                                <div class="modal-header">
+                                    <h5 class="modal-title">Editar Reseña</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                </div>
+                                <div class="modal-body">
+                                    <form method="POST" action="{% url 'Administrador:editar_reseña' reseña.id %}">
+                                        {% csrf_token %}
+                                        <div class="mb-3">
+                                            <label for="calificacion" class="form-label">Calificación</label>
+                                            <select name="calificacion" id="calificacion" class="form-select">
+                                                {% for i in "12345" %}
+                                                <option value="{{ i }}" {% if reseña.calificacion == i %}selected{% endif %}>{{ i }}</option>
+                                                {% endfor %}
+                                            </select>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="comentario" class="form-label">Comentario</label>
+                                            <textarea name="comentario" id="comentario" class="form-control" rows="4">{{ reseña.comentario }}</textarea>
+                                        </div>
+                                        <button type="submit" class="btn btn-success">Guardar Cambios</button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </td>
+                <td>
+                    <form method="POST" action="{% url 'Administrador:eliminar_reseña' reseña.id %}">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-danger">Eliminar</button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}
